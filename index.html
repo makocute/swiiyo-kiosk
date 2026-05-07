@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>SWIIYO — Glow Refuel Station</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=DM+Sans:ital,wght@0,300;0,400;0,700;1,300&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+
+:root{
+  --ink:#080808;
+  --chalk:#f5f2ee;
+  --chalk-d:rgba(245,242,238,0.5);
+  --chalk-dd:rgba(245,242,238,0.1);
+  --mono:'Space Mono',monospace;
+  --display:'Bebas Neue',sans-serif;
+  --body:'DM Sans',sans-serif;
+  --ease:cubic-bezier(0.16,1,0.3,1);
+}
+
+html,body{width:100vw;height:100vh;overflow:hidden;background:var(--ink);color:var(--chalk);font-family:var(--body);-webkit-font-smoothing:antialiased}
+
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;overflow:hidden;transition:opacity 0.4s var(--ease),transform 0.4s var(--ease);z-index:1}
+.screen.hidden{opacity:0;pointer-events:none;transform:scale(0.98)}
+
+/* ══ S0 ATTRACT ══ */
+#s-attract{background:var(--ink);justify-content:space-between}
+.orb{position:absolute;border-radius:50%;filter:blur(100px);pointer-events:none}
+.o1{width:600px;height:600px;top:-150px;left:-120px;background:radial-gradient(circle,rgba(255,51,0,0.18) 0%,transparent 65%);animation:afloat 11s ease-in-out infinite}
+.o2{width:400px;height:400px;bottom:120px;right:-80px;background:radial-gradient(circle,rgba(26,86,255,0.18) 0%,transparent 65%);animation:afloat 8s ease-in-out infinite reverse}
+.o3{width:240px;height:240px;top:48%;left:52%;background:radial-gradient(circle,rgba(255,208,0,0.12) 0%,transparent 65%);animation:afloat 6s ease-in-out infinite 1.5s}
+
+.attract-main{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 48px 32px}
+.attract-eyebrow{font-family:var(--mono);font-size:16px;letter-spacing:0.45em;color:rgba(255,208,0,0.85);text-transform:uppercase;margin-bottom:28px}
+.attract-wordmark{font-family:var(--display);font-size:clamp(120px,18vw,200px);letter-spacing:0.06em;color:var(--chalk);line-height:1;margin-bottom:8px;animation:apulse 3.5s ease-in-out infinite}
+.attract-tagline{font-family:var(--body);font-size:clamp(16px,2.2vw,22px);font-weight:300;letter-spacing:0.28em;color:var(--chalk-d);text-transform:uppercase;margin-bottom:64px}
+.gauge{width:100%;max-width:440px;border:2px solid rgba(255,208,0,0.3);background:rgba(255,208,0,0.04);padding:28px 32px 24px;position:relative;overflow:hidden}
+.gauge::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#FFD000,transparent);animation:ashim 2.8s ease-in-out infinite}
+.gauge-lbl{font-family:var(--mono);font-size:12px;letter-spacing:0.4em;color:rgba(255,208,0,0.7);display:block;text-transform:uppercase;margin-bottom:16px}
+.gauge-track{height:5px;background:rgba(245,242,238,0.08);border-radius:3px;overflow:hidden;margin-bottom:16px}
+.gauge-fill{height:100%;width:8%;background:#FFD000;border-radius:3px;animation:agfill 2s ease-in-out infinite}
+.gauge-num{font-family:var(--display);font-size:clamp(80px,14vw,120px);line-height:1;color:var(--chalk);letter-spacing:-0.02em}
+.gauge-num sup{font-family:var(--mono);font-size:0.35em;color:var(--chalk-d)}
+.gauge-warn{font-family:var(--mono);font-size:11px;letter-spacing:0.2em;color:rgba(245,242,238,0.22);margin-top:8px;display:block}
+.attract-cta{width:100%;flex-shrink:0;padding:44px 32px;background:#FF3300;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;position:relative;overflow:hidden}
+.attract-cta::before{content:'';position:absolute;top:0;left:0;right:0;height:6px;background:linear-gradient(90deg,#FFD000,#FF0080,#1A56FF,#00C851,#FFD000)}
+.attract-cta::after{content:'';position:absolute;inset:0;background:linear-gradient(110deg,transparent,rgba(255,255,255,0.18),transparent);transform:translateX(-100%);animation:ashine 3s ease-in-out infinite}
+.cta-main{font-family:var(--display);font-size:clamp(48px,7vw,72px);letter-spacing:0.2em;color:#FFFFFF;position:relative;z-index:1;animation:apulse 2.2s ease-in-out infinite}
+.cta-sub{font-family:var(--mono);font-size:14px;letter-spacing:0.18em;color:rgba(255,255,255,0.5);position:relative;z-index:1}
+
+/* ══ SHARED TOP BAR ══ */
+.s-topbar{width:100%;flex-shrink:0;padding:20px 48px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid rgba(255,208,0,0.2)}
+.s-brand{font-family:var(--display);font-size:36px;letter-spacing:0.1em;color:#FFD000}
+.s-step{font-family:var(--mono);font-size:13px;letter-spacing:0.3em;color:var(--chalk-d);text-transform:uppercase}
+
+/* ══ S1 NAME ══ */
+#s-name{background:var(--ink)}
+.name-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 48px;width:100%}
+.step-eye{font-family:var(--mono);font-size:13px;letter-spacing:0.4em;color:rgba(255,208,0,0.8);text-transform:uppercase;margin-bottom:20px}
+.name-h{font-family:var(--display);font-size:clamp(60px,10vw,96px);letter-spacing:0.06em;color:var(--chalk);text-align:center;line-height:1.05;margin-bottom:8px}
+.name-h em{color:#FFD000;font-style:normal}
+.name-sub{font-family:var(--mono);font-size:13px;letter-spacing:0.22em;color:var(--chalk-d);margin-bottom:32px;text-align:center;text-transform:uppercase}
+.name-field{width:100%;max-width:600px;border-bottom:3px solid rgba(255,208,0,0.5);padding:6px 0 14px;display:flex;align-items:baseline;gap:12px;margin-bottom:32px}
+.name-lbl{font-family:var(--mono);font-size:13px;letter-spacing:0.2em;color:#FFD000;flex-shrink:0}
+.name-val{font-family:var(--display);font-size:clamp(52px,9vw,80px);letter-spacing:0.04em;color:var(--chalk);flex:1;line-height:1;min-height:1em}
+.cursor{display:inline-block;width:4px;height:0.75em;background:#FFD000;animation:ablink 0.9s step-end infinite;vertical-align:middle;margin-left:3px}
+.keyboard{width:100%;max-width:680px;display:flex;flex-direction:column;gap:8px}
+.kb-row{display:flex;justify-content:center;gap:6px}
+.kb-key{flex:1;max-width:58px;height:64px;background:rgba(245,242,238,0.05);border:1px solid rgba(245,242,238,0.1);color:var(--chalk);font-family:var(--display);font-size:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:4px;transition:background 0.07s,transform 0.05s}
+.kb-key:active{background:rgba(255,208,0,0.25);border-color:#FFD000;transform:scale(0.88)}
+.kb-key.num{max-width:54px;font-size:20px;font-family:var(--mono)}
+.kb-key.wide{max-width:96px;font-family:var(--mono);font-size:15px;letter-spacing:0.06em}
+.kb-key.go{max-width:148px;background:#FF3300;border-color:#FF3300;color:#FFFFFF;font-family:var(--mono);font-size:15px;letter-spacing:0.1em}
+.kb-key.go:active{background:#FF5522;transform:scale(0.92)}
+
+/* ══ S2 SCAN ══ */
+#s-scan{background:var(--ink)}
+.scan-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;gap:28px}
+.scan-h{font-family:var(--display);font-size:clamp(52px,9vw,80px);letter-spacing:0.06em;color:var(--chalk);text-align:center;line-height:1.1}
+.scan-h em{color:#FFD000;font-style:normal}
+.scan-frame{width:240px;height:240px;position:relative;display:flex;align-items:center;justify-content:center;font-size:96px}
+.scan-frame::before,.scan-frame::after,.sb,.sl{content:'';position:absolute;width:28px;height:28px;border-color:#FFD000;border-style:solid}
+.scan-frame::before{top:0;left:0;border-width:3px 0 0 3px}
+.scan-frame::after{top:0;right:0;border-width:3px 3px 0 0}
+.sb{bottom:0;right:0;border-width:0 3px 3px 0}
+.sl{bottom:0;left:0;border-width:0 0 3px 3px}
+.scan-beam{position:absolute;left:4px;right:4px;height:2px;background:linear-gradient(90deg,transparent,#FFD000,transparent);box-shadow:0 0 12px rgba(255,208,0,0.6);animation:asweep 1.8s ease-in-out infinite;top:0}
+.scan-hint{font-family:var(--mono);font-size:14px;color:var(--chalk-d);text-align:center;line-height:2;letter-spacing:0.08em;text-transform:uppercase}
+.scan-demo{background:none;border:2px solid rgba(245,242,238,0.15);color:rgba(245,242,238,0.35);padding:14px 36px;font-family:var(--mono);font-size:13px;letter-spacing:0.2em;cursor:pointer;text-transform:uppercase;transition:border-color 0.2s,color 0.2s}
+.scan-demo:active{border-color:#FFD000;color:#FFD000}
+
+/* ══ S3 PUMP ══ */
+#s-pump{background:var(--ink)}
+.pump-hdr{width:100%;flex-shrink:0;padding:18px 48px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid rgba(255,208,0,0.15)}
+.pump-player{display:flex;align-items:center;gap:10px}
+.pdot{width:10px;height:10px;border-radius:50%;background:#FF3300;box-shadow:0 0 12px rgba(255,51,0,0.8);animation:apulse 1.6s ease-in-out infinite}
+.plabel{font-family:var(--mono);font-size:13px;letter-spacing:0.12em;color:var(--chalk-d);text-transform:uppercase}
+.pname{font-family:var(--mono);font-size:13px;color:#FFD000;letter-spacing:0.1em}
+.pump-logo{font-family:var(--display);font-size:28px;letter-spacing:0.1em;color:rgba(245,242,238,0.2)}
+.pump-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 48px 20px;width:100%}
+.meter{width:100%;max-width:520px;background:rgba(245,242,238,0.03);border:2px solid rgba(255,208,0,0.2);padding:28px 36px 24px;margin-bottom:20px;position:relative;overflow:hidden}
+.meter::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(255,208,0,0.5),transparent)}
+.meter-top{display:flex;justify-content:space-between;margin-bottom:12px}
+.mlbl{font-family:var(--mono);font-size:11px;letter-spacing:0.35em;color:#FFD000;text-transform:uppercase}
+.mtgt{font-family:var(--mono);font-size:11px;letter-spacing:0.1em;color:rgba(245,242,238,0.18)}
+.mnum{font-family:var(--display);font-size:clamp(100px,20vw,160px);line-height:0.9;display:block;letter-spacing:-0.03em;color:var(--chalk);transition:color 0.3s,text-shadow 0.3s}
+.mnum.warm{color:#FFD000;text-shadow:0 0 60px rgba(255,208,0,0.4)}
+.mnum.hot{color:#FF6B35;text-shadow:0 0 60px rgba(255,107,53,0.45)}
+.mnum.danger{color:#FF3300;text-shadow:0 0 60px rgba(255,51,0,0.55)}
+.mnum.perfect{color:#FFFFFF;text-shadow:0 0 80px rgba(255,255,255,0.9)}
+.mpct{font-size:0.3em;color:var(--chalk-d)}
+.ebar-wrap{height:6px;background:rgba(245,242,238,0.07);border-radius:3px;overflow:hidden;margin-top:16px;position:relative}
+.ebar{height:100%;width:0%;border-radius:3px;background:#FFD000;transition:width 0.06s linear,background 0.3s}
+.emark{position:absolute;top:-6px;bottom:-6px;left:calc(100%/118*100);width:2px;background:rgba(245,242,238,0.25)}
+.speed-lbl{font-family:var(--mono);font-size:13px;letter-spacing:0.2em;color:#FFD000;text-align:center;height:20px;text-transform:uppercase;margin-bottom:20px;transition:color 0.3s}
+.pbtn{width:210px;height:210px;border-radius:50%;background:rgba(245,242,238,0.03);border:3px solid rgba(255,51,0,0.4);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;touch-action:none;position:relative;overflow:hidden;transition:transform 0.1s,box-shadow 0.15s,border-color 0.15s}
+.pbtn.pressing{transform:scale(0.87);border-color:#FF3300;box-shadow:0 0 0 24px rgba(255,51,0,0.07),0 0 60px rgba(255,51,0,0.22)}
+.ring{position:absolute;inset:-12px;border-radius:50%;border:2px solid rgba(255,51,0,0.5);opacity:0;pointer-events:none}
+.pbtn.pressing .ring:nth-child(1){animation:aring 1.1s ease-out 0s infinite}
+.pbtn.pressing .ring:nth-child(2){animation:aring 1.1s ease-out 0.37s infinite}
+.pbtn.pressing .ring:nth-child(3){animation:aring 1.1s ease-out 0.74s infinite}
+.pbtn-icon{font-size:56px;margin-bottom:4px}
+.pbtn-lbl{font-family:var(--mono);font-size:13px;letter-spacing:0.3em;color:#FF3300;text-transform:uppercase}
+.pump-hint{font-family:var(--mono);font-size:12px;color:rgba(245,242,238,0.18);text-align:center;line-height:2;letter-spacing:0.06em;text-transform:uppercase;margin-top:16px}
+@keyframes ashk{0%,100%{transform:none}20%{transform:translateX(-4px)}40%{transform:translateX(4px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+.shaking{animation:ashk 0.12s infinite}
+
+/* ══ S4 RESULT ══ */
+#s-result{overflow:hidden}
+
+/* Full bleed vibe bg */
+.vibe-canvas{position:absolute;inset:0;z-index:0;transition:background 0.4s}
+.vibe-deco{position:absolute;inset:0;z-index:1;pointer-events:none}
+.vparticles{position:absolute;inset:0;z-index:2;overflow:hidden;pointer-events:none}
+.vp{position:absolute;border-radius:50%;animation:afup linear infinite}
+
+/* Result layout — centered, scrollable */
+.result-panel{
+  position:absolute;inset:0;z-index:10;
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+  overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:32px 32px 120px;
+  gap:24px;
+}
+
+/* Share card — canvas wrapper */
+.share-card-wrap{
+  width:100%;max-width:540px;
+  position:relative;
+}
+.share-canvas{
+  width:100%;
+  border-radius:4px;
+  display:block;
+  /* Long press to save on iOS */
+  -webkit-touch-callout:default !important;
+  user-select:auto !important;
+  touch-action:auto !important;
+}
+.share-hint{
+  font-family:var(--mono);font-size:12px;letter-spacing:0.2em;
+  color:rgba(245,242,238,0.4);text-transform:uppercase;
+  text-align:center;margin-top:12px;
+}
+.share-hint em{
+  display:inline-block;
+  border:1px solid rgba(245,242,238,0.3);
+  padding:4px 14px;margin-top:6px;
+  color:rgba(245,242,238,0.6);font-style:normal;
+}
+
+/* Info strip below card */
+.info-strip{
+  width:100%;max-width:540px;
+  background:rgba(245,242,238,0.06);
+  border:1px solid rgba(245,242,238,0.1);
+  padding:20px 28px;
+  display:flex;flex-direction:column;gap:10px;
+}
+.info-row{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px dashed rgba(245,242,238,0.1);padding-bottom:10px}
+.info-row:last-child{border:none;padding:0}
+.info-lbl{font-family:var(--mono);font-size:10px;letter-spacing:0.25em;color:var(--chalk-d);text-transform:uppercase}
+.info-val{font-family:var(--mono);font-size:13px;color:var(--chalk);font-weight:700}
+
+/* Drink + code row */
+.bottom-cards{width:100%;max-width:540px;display:flex;gap:16px}
+.drink-card{
+  flex:1;padding:18px 20px;
+  border-left:4px solid var(--chalk);
+  background:rgba(245,242,238,0.06);
+}
+.drink-card-lbl{font-family:var(--mono);font-size:9px;letter-spacing:0.3em;color:var(--chalk-d);text-transform:uppercase;display:block;margin-bottom:6px}
+.drink-card-name{font-family:var(--display);font-size:22px;letter-spacing:0.04em;color:var(--chalk);display:block;line-height:1.1}
+.drink-card-note{font-family:var(--body);font-size:12px;color:var(--chalk-d);display:block;margin-top:4px;font-style:italic}
+.code-card{
+  padding:18px 20px;
+  background:var(--chalk);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  min-width:160px;
+}
+.code-card-lbl{font-family:var(--mono);font-size:9px;letter-spacing:0.25em;color:#555;text-transform:uppercase}
+.code-card-val{font-family:var(--display);font-size:24px;letter-spacing:0.1em;color:#111}
+.code-card-sub{font-family:var(--mono);font-size:9px;color:#888;text-align:center;line-height:1.6}
+
+/* Play again */
+.again-wrap{position:fixed;bottom:0;left:0;right:0;z-index:20}
+.again-bar{width:0%;height:5px;background:rgba(0,0,0,0.2);transition:width 1.8s linear}
+.again-bar.go{width:100%}
+.again-btn{width:100%;border:none;cursor:pointer;font-family:var(--display);font-size:clamp(32px,5vw,52px);letter-spacing:0.22em;padding:28px;text-transform:uppercase;position:relative;overflow:hidden;display:block;-webkit-appearance:none;transition:background 0.4s,color 0.4s}
+.again-btn::after{content:'';position:absolute;inset:0;background:linear-gradient(110deg,transparent,rgba(255,255,255,0.18),transparent);transform:translateX(-100%);animation:ashine 2.5s ease-in-out infinite}
+
+/* ══ KEYFRAMES ══ */
+@keyframes afloat{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(18px,-24px) scale(1.03)}66%{transform:translate(-12px,18px) scale(0.97)}}
+@keyframes ablink{50%{opacity:0}}
+@keyframes ashim{0%,100%{opacity:0;transform:scaleX(0)}50%{opacity:1;transform:scaleX(1)}}
+@keyframes agfill{0%,100%{width:8%;opacity:1}50%{width:5%;opacity:0.5}}
+@keyframes ashine{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+@keyframes apulse{0%,100%{transform:scale(1)}50%{transform:scale(1.015)}}
+@keyframes asweep{0%{top:0%}50%{top:calc(100% - 2px)}100%{top:0%}}
+@keyframes aring{0%{transform:scale(0.8);opacity:0.5}100%{transform:scale(1.5);opacity:0}}
+@keyframes afup{0%{transform:translateY(0) scale(1);opacity:0.9}100%{transform:translateY(-100vh) scale(0.4);opacity:0}}
+</style>
+</head>
+<body>
+
+<!-- S0 ATTRACT -->
+<div class="screen" id="s-attract">
+  <div style="position:absolute;inset:0;z-index:0;overflow:hidden">
+    <div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div>
+  </div>
+  <div style="position:absolute;top:0;left:0;right:0;height:8px;background:linear-gradient(90deg,#FF3300,#FFD000,#00C851,#1A56FF,#FF0080,#FF3300);z-index:10"></div>
+  <div class="attract-main">
+    <div class="attract-eyebrow">✦ 2026 SFA · Booth #2344 ✦</div>
+    <div class="attract-wordmark">SWIIYO</div>
+    <div class="attract-tagline">The Power to Shine</div>
+    <div class="gauge">
+      <span class="gauge-lbl">◈ Your Glow Energy Level</span>
+      <div class="gauge-track"><div class="gauge-fill"></div></div>
+      <span class="gauge-num" id="idle-pct">07<sup>%</sup></span>
+      <span class="gauge-warn">CRITICALLY LOW — REFUEL REQUIRED</span>
+    </div>
+  </div>
+  <div class="attract-cta" id="btn-start">
+    <span class="cta-main">TAP TO REFUEL →</span>
+    <span class="cta-sub">Free Glow Vibe Assessment · Takes 60 Seconds</span>
+  </div>
+</div>
+
+<!-- S1 NAME -->
+<div class="screen hidden" id="s-name">
+  <div style="position:absolute;top:0;left:0;right:0;height:6px;background:linear-gradient(90deg,#FF3300,#FFD000,#00C851,#1A56FF,#FF0080);z-index:10"></div>
+  <div class="s-topbar"><span class="s-brand">SWIIYO</span><span class="s-step">Step 01 / 03</span></div>
+  <div class="name-body">
+    <div class="step-eye">◈ Step One</div>
+    <div class="name-h">Who's getting <em>refueled?</em></div>
+    <div class="name-sub">Enter your name to begin</div>
+    <div class="name-field">
+      <span class="name-lbl">NAME //</span>
+      <span class="name-val" id="name-display"><span class="cursor"></span></span>
+    </div>
+    <div class="keyboard" id="keyboard">
+      <div class="kb-row" id="kb-nums"></div>
+      <div class="kb-row" id="kb-r1"></div>
+      <div class="kb-row" id="kb-r2"></div>
+      <div class="kb-row" id="kb-r3"></div>
+      <div class="kb-row">
+        <div class="kb-key wide" id="kb-del">⌫ DEL</div>
+        <div class="kb-key wide" data-k=" ">SPACE</div>
+        <div class="kb-key go" id="kb-go">FUEL IT ✦</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- S2 SCAN -->
+<div class="screen hidden" id="s-scan">
+  <div style="position:absolute;top:0;left:0;right:0;height:6px;background:linear-gradient(90deg,#FF3300,#FFD000,#00C851,#1A56FF,#FF0080);z-index:10"></div>
+  <div class="s-topbar"><span class="s-brand">SWIIYO</span><span class="s-step">Step 02 / 03</span></div>
+  <div class="scan-body">
+    <div class="step-eye">◈ Step Two</div>
+    <div class="scan-h">Show your <em>SFA badge</em></div>
+    <div class="scan-frame">🪪<span class="sb"></span><span class="sl"></span><div class="scan-beam"></div></div>
+    <div class="scan-hint">Hold your SFA badge QR code<br>in front of the camera to unlock</div>
+    <button class="scan-demo" id="btn-scan">▸ Simulate Scan (Demo Mode)</button>
+  </div>
+</div>
+
+<!-- S3 PUMP -->
+<div class="screen hidden" id="s-pump">
+  <div style="position:absolute;top:0;left:0;right:0;height:6px;background:linear-gradient(90deg,#FF3300,#FFD000,#00C851,#1A56FF,#FF0080);z-index:10"></div>
+  <div class="pump-hdr">
+    <div class="pump-player"><div class="pdot"></div><span class="plabel">Refueling:</span><span class="pname" id="pump-name">—</span></div>
+    <span class="pump-logo">SWIIYO</span>
+  </div>
+  <div class="pump-body">
+    <div class="meter">
+      <div class="meter-top"><span class="mlbl">◈ Glow Energy</span><span class="mtgt">Target 100.0%</span></div>
+      <span class="mnum" id="mnum">00.0<span class="mpct">%</span></span>
+      <div class="ebar-wrap"><div class="ebar" id="ebar"></div><div class="emark"></div></div>
+    </div>
+    <div class="speed-lbl" id="speed-lbl">Standby · Hold button to charge</div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:16px">
+      <div class="pbtn" id="pbtn">
+        <div class="ring"></div><div class="ring"></div><div class="ring"></div>
+        <div class="pbtn-icon">✦</div>
+        <div class="pbtn-lbl">HOLD</div>
+      </div>
+      <div class="pump-hint">Hold to charge · Release to lock your score<br>Precision stop at 100% = max glow</div>
+    </div>
+  </div>
+</div>
+
+<!-- S4 RESULT -->
+<div class="screen hidden" id="s-result">
+  <div class="vibe-canvas" id="vcanvas"></div>
+  <div class="vibe-deco" id="vdeco"></div>
+  <div class="vparticles" id="vparts"></div>
+
+  <div class="result-panel" id="result-panel">
+    <!-- Canvas share card — generated by JS -->
+    <div class="share-card-wrap">
+      <canvas class="share-canvas" id="share-canvas" width="1080" height="1920"></canvas>
+      <div class="share-hint">
+        Long press image to save &amp; AirDrop<br>
+        <em>↓ Hold to Share</em>
+      </div>
+    </div>
+
+    <!-- Info strip -->
+    <div class="info-strip" id="info-strip">
+      <div class="info-row"><span class="info-lbl">Operator</span><span class="info-val" id="r-name">—</span></div>
+      <div class="info-row"><span class="info-lbl">Energy Filled</span><span class="info-val" id="r-score">—</span></div>
+      <div class="info-row"><span class="info-lbl">Precision Rating</span><span class="info-val" id="r-rating">—</span></div>
+    </div>
+
+    <!-- Drink + code -->
+    <div class="bottom-cards">
+      <div class="drink-card" id="drink-card">
+        <span class="drink-card-lbl">◈ Recommended Fuel</span>
+        <span class="drink-card-name" id="r-drink">—</span>
+        <span class="drink-card-note" id="r-dnote">—</span>
+      </div>
+      <div class="code-card" id="code-card">
+        <span class="code-card-lbl">5% Off · First Order</span>
+        <span class="code-card-val">GLOWUP-SFA26</span>
+        <span class="code-card-sub">Show at booth<br>for free sample ✦</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="again-wrap">
+    <div class="again-bar" id="again-bar"></div>
+    <button class="again-btn" id="again-btn" type="button">↺ &nbsp;Play Again</button>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════
+   SWIIYO Glow Refuel Station · v8.0
+   iPad Air 13 · Canvas Share Card
+   Neo-Brutalist Flat · All English
+══════════════════════════════════════════ */
+
+const VIBES=[
+  {id:'flatliner',min:0,max:39.9,medal:'🔋',title:'THE FLATLINER',sub:'Needs Immediate Refueling',rating:'CRITICAL LOW',classLabel:'Energy Depleted',
+   copy:"Your tank is on fumes.\nEvery empire started with someone\nwho refused to quit on empty.",
+   drink:'Swiiyo Aura · Grape Passion Fruit',dnote:'Zero-cal Beauty Sparkling · Your comeback starts here.',
+   bg:'#1A56FF',c1:'#FFE600',c2:'#FFFFFF',stripe:'linear-gradient(90deg,#FFE600,#FFFFFF,#FFE600)'},
+  {id:'hustler',min:40,max:59.9,medal:'🔥',title:'THE HUSTLER',sub:'Always In Motion',rating:'GRINDING',classLabel:'High-Effort Mode',
+   copy:"You don't wait for perfect conditions.\nYou move, and figure it out\nin the process.",
+   drink:'Swiiyo Energy · Popping Boba Orange',dnote:'25 cal · 5g sugar · Hits different when you need it most.',
+   bg:'#FF3300',c1:'#FFFFFF',c2:'#FFE600',stripe:'linear-gradient(90deg,#FFE600,#FFFFFF,#FFE600)'},
+  {id:'operator',min:60,max:74.9,medal:'🎯',title:'THE SMOOTH\nOPERATOR',sub:'Calculated & Composed',rating:'STEADY',classLabel:'Controlled Execution',
+   copy:"Precision is a competitive advantage.\nYou don't rush the close.\nThat's what separates great buyers.",
+   drink:'Swiiyo Aura · Muscat Grape',dnote:'Zero-cal Unsweetened · Clean and focused.',
+   bg:'#00C851',c1:'#1A0050',c2:'#FFFFFF',stripe:'linear-gradient(90deg,#1A0050,#FFFFFF,#1A0050)'},
+  {id:'strategist',min:75,max:84.9,medal:'♟️',title:'THE STRATEGIST',sub:'Three Moves Ahead',rating:'TACTICAL',classLabel:'High Situational IQ',
+   copy:"While others are reacting,\nyou're planning next quarter.\nThe best SKU? You already know.",
+   drink:'Swiiyo Aura · Rose Lychee',dnote:'Zero-cal Beauty Sparkling · For people who plan ahead.',
+   bg:'#5500FF',c1:'#00FF88',c2:'#FFFFFF',stripe:'linear-gradient(90deg,#00FF88,#FFFFFF,#00FF88)'},
+  {id:'closer',min:85,max:92.4,medal:'💼',title:'THE CLOSER',sub:'Seals the Deal',rating:'DIALED IN',classLabel:'High-Conviction Buyer',
+   copy:"People remember when you walk in.\nNot because you're loud —\nbecause you're decided.",
+   drink:'Swiiyo Energy · Popping Boba Orange',dnote:'25 cal · 5g sugar · For when the deal is almost done.',
+   bg:'#FFD000',c1:'#0A0A0A',c2:'#FF3300',stripe:'linear-gradient(90deg,#0A0A0A,#FF3300,#0A0A0A)'},
+  {id:'sharp',min:92.5,max:96.9,medal:'⚡',title:'THE SHARP ONE',sub:'Nothing Gets Past You',rating:'ACUTE',classLabel:'Razor-Edge Precision',
+   copy:"You notice what others skip.\nThe margin discrepancy.\nThe SKU that hasn't peaked yet.",
+   drink:'Swiiyo Aura · Grape Passion Fruit',dnote:'Zero-cal Beauty Sparkling · Sharp ingredients for a sharp palate.',
+   bg:'#FF0080',c1:'#FFE600',c2:'#FFFFFF',stripe:'linear-gradient(90deg,#FFE600,#FFFFFF,#FFE600)'},
+  {id:'precision',min:97,max:99.4,medal:'🎖️',title:'THE PRECISION PRO',sub:'Accuracy Is Everything',rating:'ELITE',classLabel:'Near-Perfect Execution',
+   copy:"Close isn't a miss — it's a standard.\nYou operate at a level\nmost buyers can't touch.",
+   drink:'Swiiyo Aura · Muscat Grape',dnote:'Zero-cal Unsweetened · Precision flavor for precision buyers.',
+   bg:'#FF6B35',c1:'#001F5B',c2:'#FFFFFF',stripe:'linear-gradient(90deg,#001F5B,#FFFFFF,#001F5B)'},
+  {id:'mastermind',min:99.5,max:100.5,medal:'👑',title:'THE MASTERMIND',sub:'★ Flawless Execution ★',rating:'★ PERFECT ★',classLabel:'Legendary Precision',
+   copy:"You didn't just hit 100.\nYou intended to hit 100.\nTrends happen because of you.",
+   drink:'Swiiyo Energy · Popping Boba Orange',dnote:'25 cal · 5g sugar · Perfect match for a perfect stop.',
+   bg:'#FFFFFF',c1:'#0A0A0A',c2:'#FF0080',stripe:'linear-gradient(90deg,#a78bfa,#FF0080,#FFD000,#00C851,#1A56FF)'},
+  {id:'risk',min:100.6,max:105,medal:'🎲',title:'THE RISK TAKER',sub:'Deliberately Over the Line',rating:'DARING',classLabel:'Controlled Recklessness',
+   copy:"You knew where 100 was.\nYou blew right past it.\nHigh risk, high margin, high reward.",
+   drink:'Swiiyo Aura · Rose Lychee',dnote:'Zero-cal Beauty Sparkling · For buyers who push past the edge.',
+   bg:'#E0000C',c1:'#FFFFFF',c2:'#FFE600',stripe:'linear-gradient(90deg,#FFE600,#FFFFFF,#FFE600)'},
+  {id:'chaos',min:105.1,max:999,medal:'💥',title:'THE CHAOS AGENT',sub:'Off Every Chart',rating:'🚨 OVERLOAD',classLabel:'Category Destroyer',
+   copy:"The gauge broke.\nThe market didn't know what hit it.\nYou are the disruption.",
+   drink:'Swiiyo Energy · Popping Boba Orange',dnote:'25 cal · 5g sugar · Match energy for unstoppable energy.',
+   bg:'#0A0A0A',c1:'#FF0000',c2:'#FFE600',stripe:'linear-gradient(90deg,#FF0000,#FFE600,#FF0000)'},
+];
+const getVibe=pct=>VIBES.find(v=>pct>=v.min&&pct<=v.max)||VIBES[0];
+
+/* ── AUDIO ── */
+const AC=new(window.AudioContext||window.webkitAudioContext)();
+const unlock=()=>AC.resume();
+document.addEventListener('touchstart',unlock,{once:true});
+document.addEventListener('mousedown',unlock,{once:true});
+function tone(f,t='sine',dur=0.1,g=0.15,delay=0){
+  const o=AC.createOscillator(),gn=AC.createGain();
+  o.connect(gn);gn.connect(AC.destination);o.type=t;o.frequency.value=f;
+  const st=AC.currentTime+delay;
+  gn.gain.setValueAtTime(0,st);gn.gain.linearRampToValueAtTime(g,st+0.01);gn.gain.exponentialRampToValueAtTime(0.001,st+dur);
+  o.start(st);o.stop(st+dur+0.05);
+}
+function noise(dur,g=0.08){
+  const buf=AC.createBuffer(1,AC.sampleRate*dur,AC.sampleRate);
+  const d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+  const s=AC.createBufferSource(),gn=AC.createGain(),f=AC.createBiquadFilter();
+  f.type='bandpass';f.frequency.value=1200;s.buffer=buf;s.connect(f);f.connect(gn);gn.connect(AC.destination);
+  gn.gain.setValueAtTime(g,AC.currentTime);gn.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+dur);
+  s.start();s.stop(AC.currentTime+dur+0.05);
+}
+const SFX={
+  key:()=>tone(880,'square',0.04,0.05),
+  scan:()=>{tone(440,'sine',0.1,0.14);tone(660,'sine',0.15,0.18,0.1);tone(880,'sine',0.2,0.16,0.22)},
+  pumpL:()=>tone(80+gVal*0.4,'sawtooth',0.07,0.1),
+  pumpM:()=>tone(120+gVal*0.8,'sawtooth',0.06,0.12),
+  pumpH:()=>tone(180+gVal*1.2,'square',0.05,0.11),
+  perfect:()=>{tone(523,'sine',0.25,0.28);tone(659,'sine',0.3,0.24,0.12);tone(784,'sine',0.4,0.26,0.26)},
+  overload:()=>{noise(0.15,0.2);tone(55,'sawtooth',0.3,0.24,0.1)},
+  print:()=>noise(0.55,0.1),
+  click:()=>tone(440,'sine',0.1,0.08),
+};
+
+let playerName='',gVal=0,gRunning=false,gTimer=null,sfxTick=0,delTimer=null,confirmRunning=false;
+const show=id=>{document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));document.getElementById(id).classList.remove('hidden')};
+
+/* ATTRACT */
+const idleEl=document.getElementById('idle-pct');
+const idleSeq=['07','03','11','05','08','02','09'];let idleIdx=0;
+setInterval(()=>{idleIdx=(idleIdx+1)%idleSeq.length;idleEl.innerHTML=idleSeq[idleIdx]+'<sup>%</sup>'},1900);
+document.getElementById('btn-start').addEventListener('click',()=>{show('s-name');buildKB()});
+
+/* KEYBOARD */
+function buildKB(){
+  const nr=document.getElementById('kb-nums');nr.innerHTML='';
+  [...'1234567890'].forEach(k=>{const d=document.createElement('div');d.className='kb-key num';d.textContent=k;d.addEventListener('click',()=>typeKey(k));nr.appendChild(d)});
+  [['QWERTYUIOP','kb-r1'],['ASDFGHJKL','kb-r2'],['ZXCVBNM','kb-r3']].forEach(([row,id])=>{
+    const el=document.getElementById(id);el.innerHTML='';
+    [...row].forEach(k=>{const d=document.createElement('div');d.className='kb-key';d.textContent=k;d.addEventListener('click',()=>typeKey(k));el.appendChild(d)});
+  });
+  const del=document.getElementById('kb-del');
+  del.addEventListener('click',()=>typeKey('⌫'));
+  del.addEventListener('mousedown',()=>{delTimer=setTimeout(()=>{playerName='';renderName();SFX.key()},600)});
+  del.addEventListener('touchstart',()=>{delTimer=setTimeout(()=>{playerName='';renderName();SFX.key()},600)},{passive:true});
+  ['mouseup','touchend'].forEach(e=>del.addEventListener(e,()=>clearTimeout(delTimer)));
+  document.querySelector('[data-k=" "]').addEventListener('click',()=>typeKey(' '));
+  document.getElementById('kb-go').addEventListener('click',confirmName);
+}
+function typeKey(k){SFX.key();if(k==='⌫')playerName=playerName.slice(0,-1);else if(playerName.length<16)playerName+=k;renderName()}
+function renderName(){document.getElementById('name-display').innerHTML=(playerName||'')+'<span class="cursor"></span>'}
+function confirmName(){if(!playerName.trim())playerName='VISITOR';show('s-scan')}
+
+/* SCAN */
+document.getElementById('btn-scan').addEventListener('click',()=>{SFX.scan();setTimeout(()=>show('s-pump'),620);setTimeout(startPump,660)});
+
+/* PUMP */
+function startPump(){
+  document.getElementById('pump-name').textContent=playerName.toUpperCase();
+  gVal=0;gRunning=false;sfxTick=0;
+  clearInterval(gTimer);renderMeter(0);
+  setSpd('Standby · Hold button to charge','#FFD000');
+  bindPump();
+}
+function bindPump(){
+  const old=document.getElementById('pbtn');
+  const fresh=old.cloneNode(true);old.parentNode.replaceChild(fresh,old);
+  const pb=document.getElementById('pbtn');
+  const onP=e=>{e.preventDefault();gRunning=true;pb.classList.add('pressing');runTick()};
+  const onR=e=>{e.preventDefault();gRunning=false;pb.classList.remove('pressing','shaking');clearInterval(gTimer);if(gVal>0.5)setTimeout(showResult,300)};
+  pb.addEventListener('mousedown',onP);pb.addEventListener('touchstart',onP,{passive:false});
+  window.addEventListener('mouseup',onR);window.addEventListener('touchend',onR);
+}
+function runTick(){
+  clearInterval(gTimer);
+  gTimer=setInterval(()=>{
+    if(!gRunning)return;
+    const t=gVal/100;const spd=0.28+(t*t*3.6);const jitter=gVal>80?(Math.random()-0.5)*0.65:0;
+    gVal=Math.min(gVal+spd+jitter,118);renderMeter(gVal);
+    sfxTick++;if(sfxTick%4===0){if(gVal<50)SFX.pumpL();else if(gVal<85)SFX.pumpM();else SFX.pumpH()}
+    const pb=document.getElementById('pbtn');
+    if(gVal<50){setSpd('Charging... steady now','#FFD000');pb.classList.remove('shaking')}
+    else if(gVal<85){setSpd('▸▸ Accelerating — get ready!','#FF6B35');pb.classList.remove('shaking')}
+    else if(gVal<99){setSpd('▸▸▸ ALMOST THERE — release soon!','#FF3300');pb.classList.add('shaking')}
+    else if(gVal<=100.5){setSpd('◈ PERFECT ZONE — RELEASE NOW!','#FFFFFF');pb.classList.remove('shaking')}
+    else{setSpd('⚠ OVERLOAD — RELEASE!','#FF0000');pb.classList.add('shaking')}
+    if(gVal>=118){gRunning=false;clearInterval(gTimer);setTimeout(showResult,260)}
+  },52);
+}
+function setSpd(txt,col){const el=document.getElementById('speed-lbl');el.textContent=txt;el.style.color=col}
+function renderMeter(v){
+  const el=document.getElementById('mnum');
+  el.innerHTML=Math.min(v,118).toFixed(1)+'<span class="mpct">%</span>';
+  el.className='mnum';
+  if(v>=99.5&&v<=100.5)el.classList.add('perfect');
+  else if(v>=105)el.classList.add('danger');
+  else if(v>=90)el.classList.add('hot');
+  else if(v>=65)el.classList.add('warm');
+  const bar=document.getElementById('ebar');
+  bar.style.width=Math.min((v/118)*100,100)+'%';
+  bar.style.background=v<=84?'#FFD000':v<=102?'#FF6B35':'#FF3300';
+}
+
+/* ── CANVAS CARD GENERATOR ── */
+function drawCard(vibe, name, score){
+  const canvas=document.getElementById('share-canvas');
+  const ctx=canvas.getContext('2d');
+  const W=1080, H=1920;
+  canvas.width=W; canvas.height=H;
+
+  const bg=vibe.bg;
+  const fg=vibe.c1;
+  const fg2=vibe.c2;
+  const isLight=(bg==='#FFFFFF'||bg==='#FFD000'||bg==='#00C851'||bg==='#FF6B35');
+
+  /* ── Background ── */
+  ctx.fillStyle=bg;
+  ctx.fillRect(0,0,W,H);
+
+  /* ── Decorative starburst top-right ── */
+  drawStar(ctx, 980, 140, 200, 16, fg, 0.28);
+
+  /* ── Decorative circle bottom-left ── */
+  ctx.save();
+  ctx.strokeStyle=fg;
+  ctx.globalAlpha=0.15;
+  ctx.lineWidth=5;
+  ctx.beginPath();ctx.arc(-60,1700,280,0,Math.PI*2);ctx.stroke();
+  ctx.restore();
+
+  /* ── Decorative cross marks ── */
+  drawCross(ctx, 80, 300, 40, fg, 5, 0.25);
+  drawCross(ctx, 980, 1600, 40, fg, 5, 0.25);
+  drawCross(ctx, 540, 1750, 28, fg2, 4, 0.2);
+
+  /* ── Dots ── */
+  dot(ctx, 960, 480, 12, fg, 0.45);
+  dot(ctx, 990, 516, 7,  fg, 0.3);
+
+  /* ── Top accent stripe ── */
+  const grad=ctx.createLinearGradient(0,0,W,0);
+  if(vibe.id==='mastermind'){
+    grad.addColorStop(0,'#a78bfa');grad.addColorStop(0.25,'#FF0080');
+    grad.addColorStop(0.5,'#FFD000');grad.addColorStop(0.75,'#00C851');grad.addColorStop(1,'#1A56FF');
+  } else {
+    grad.addColorStop(0,fg);grad.addColorStop(0.5,fg2);grad.addColorStop(1,fg);
+  }
+  ctx.fillStyle=grad;
+  ctx.fillRect(0,0,W,12);
+  ctx.fillRect(0,H-12,W,12);
+
+  /* ── SWIIYO logo top-left ── */
+  ctx.fillStyle=fg;
+  ctx.font=`900 52px 'Bebas Neue', sans-serif`;
+  ctx.letterSpacing='8px';
+  ctx.fillText('SWIIYO',72,90);
+
+  /* ── SFA tag top-right ── */
+  ctx.fillStyle=fg;
+  ctx.globalAlpha=0.5;
+  ctx.font=`500 22px 'Space Mono', monospace`;
+  ctx.textAlign='right';
+  ctx.fillText('2026 SFA · BOOTH #2344',W-72,80);
+  ctx.textAlign='left';
+  ctx.globalAlpha=1;
+
+  /* ── PLAYER NAME ── */
+  const nameY=340;
+  ctx.fillStyle=fg;
+  ctx.globalAlpha=0.5;
+  ctx.font=`700 28px 'Space Mono', monospace`;
+  ctx.fillText('PLAYER',72,nameY-10);
+  ctx.globalAlpha=1;
+
+  // Auto-size name font
+  let nameFontSize=220;
+  ctx.font=`900 ${nameFontSize}px 'Bebas Neue', sans-serif`;
+  while(ctx.measureText(name.toUpperCase()).width>W-144 && nameFontSize>80){
+    nameFontSize-=8;
+    ctx.font=`900 ${nameFontSize}px 'Bebas Neue', sans-serif`;
+  }
+  ctx.fillStyle=fg;
+  ctx.fillText(name.toUpperCase(),72,nameY+nameFontSize*0.82);
+
+  /* ── Divider ── */
+  const divY=nameY+nameFontSize*0.9+30;
+  ctx.fillStyle=fg;
+  ctx.globalAlpha=0.4;
+  ctx.fillRect(72,divY,120,5);
+  ctx.globalAlpha=1;
+
+  /* ── Score badge ── */
+  const badgeX=W-72-220;
+  const badgeY=divY-10;
+  ctx.fillStyle=fg;
+  ctx.fillRect(badgeX,badgeY,220,110);
+  ctx.fillStyle=bg==='#FFFFFF'?'#111':bg;
+  ctx.font=`900 70px 'Bebas Neue', sans-serif`;
+  ctx.textAlign='center';
+  ctx.fillText(score+'%',badgeX+110,badgeY+76);
+  ctx.font=`700 18px 'Space Mono', monospace`;
+  ctx.globalAlpha=0.7;
+  ctx.fillText('GLOW SCORE',badgeX+110,badgeY+100);
+  ctx.textAlign='left';
+  ctx.globalAlpha=1;
+
+  /* ── Vibe classification label ── */
+  const classY=divY+60;
+  ctx.fillStyle=fg;
+  ctx.globalAlpha=0.5;
+  ctx.font=`700 24px 'Space Mono', monospace`;
+  ctx.fillText('VIBE CLASSIFICATION',72,classY);
+  ctx.globalAlpha=1;
+
+  /* ── Vibe title — big ── */
+  const titleLines=vibe.title.split('\n');
+  let titleSize=160;
+  // Check longest line fits
+  titleLines.forEach(line=>{
+    ctx.font=`900 ${titleSize}px 'Bebas Neue', sans-serif`;
+    while(ctx.measureText(line).width>W-144 && titleSize>60){
+      titleSize-=6;
+      ctx.font=`900 ${titleSize}px 'Bebas Neue', sans-serif`;
+    }
+  });
+  ctx.fillStyle=fg;
+  ctx.font=`900 ${titleSize}px 'Bebas Neue', sans-serif`;
+  let titleY=classY+titleSize*0.9;
+  titleLines.forEach(line=>{
+    ctx.fillText(line,72,titleY);
+    titleY+=titleSize*0.88;
+  });
+
+  /* ── Vibe sub ── */
+  ctx.fillStyle=fg;
+  ctx.globalAlpha=0.5;
+  ctx.font=`700 26px 'Space Mono', monospace`;
+  ctx.fillText(vibe.sub,72,titleY+10);
+  ctx.globalAlpha=1;
+
+  /* ── Medal emoji ── */
+  ctx.font=`120px serif`;
+  ctx.fillText(vibe.medal, W-180, titleY+20);
+
+  /* ── Copy text ── */
+  const copyY=titleY+80;
+  ctx.fillStyle=fg;
+  ctx.font=`300 34px 'DM Sans', sans-serif`;
+  const copyLines=vibe.copy.split('\n');
+  copyLines.forEach((line,i)=>{
+    ctx.globalAlpha=0.8;
+    ctx.fillText(line,72,copyY+i*52);
+  });
+  ctx.globalAlpha=1;
+
+  /* ── Bottom panel ── */
+  const panelY=H-380;
+  // Dark panel bg
+  ctx.fillStyle=isLight?'rgba(0,0,0,0.08)':'rgba(255,255,255,0.08)';
+  ctx.fillRect(0,panelY,W,H-panelY-12);
+
+  // Drink name
+  ctx.fillStyle=fg;
+  ctx.globalAlpha=0.5;
+  ctx.font=`700 22px 'Space Mono', monospace`;
+  ctx.fillText('◈ RECOMMENDED FUEL',72,panelY+52);
+  ctx.globalAlpha=1;
+  ctx.font=`900 52px 'Bebas Neue', sans-serif`;
+  ctx.fillText(vibe.drink.toUpperCase(),72,panelY+120);
+  ctx.globalAlpha=0.55;
+  ctx.font=`300 italic 26px 'DM Sans', sans-serif`;
+  ctx.fillText(vibe.dnote,72,panelY+158);
+  ctx.globalAlpha=1;
+
+  // Divider
+  ctx.fillStyle=fg;ctx.globalAlpha=0.2;
+  ctx.fillRect(72,panelY+178,W-144,2);
+  ctx.globalAlpha=1;
+
+  // Code
+  ctx.fillStyle=fg;
+  ctx.globalAlpha=0.5;
+  ctx.font=`700 22px 'Space Mono', monospace`;
+  ctx.fillText('DISCOUNT CODE · 5% OFF FIRST ORDER',72,panelY+224);
+  ctx.globalAlpha=1;
+
+  // Code pill
+  ctx.fillStyle=fg;
+  ctx.fillRect(72,panelY+240,460,80);
+  ctx.fillStyle=isLight?'#111':bg;
+  ctx.font=`900 56px 'Bebas Neue', sans-serif`;
+  ctx.textAlign='center';
+  ctx.fillText('GLOWUP-SFA26',72+230,panelY+300);
+  ctx.textAlign='left';
+
+  // swiiyo.com
+  ctx.fillStyle=fg;ctx.globalAlpha=0.35;
+  ctx.font=`500 22px 'Space Mono', monospace`;
+  ctx.textAlign='right';
+  ctx.fillText('swiiyo.com · @swiiyo',W-72,panelY+292);
+  ctx.textAlign='left';ctx.globalAlpha=1;
+}
+
+/* ── Canvas helpers ── */
+function drawStar(ctx,cx,cy,r,pts,fill,opacity){
+  ctx.save();ctx.globalAlpha=opacity;ctx.fillStyle=fill;
+  const inner=r*0.42;
+  ctx.beginPath();
+  for(let i=0;i<pts*2;i++){
+    const rad=i%2===0?r:inner,a=(i*Math.PI/pts)-Math.PI/2;
+    i===0?ctx.moveTo(cx+rad*Math.cos(a),cy+rad*Math.sin(a)):ctx.lineTo(cx+rad*Math.cos(a),cy+rad*Math.sin(a));
+  }
+  ctx.closePath();ctx.fill();ctx.restore();
+}
+function drawCross(ctx,cx,cy,size,color,sw,opacity){
+  const h=size/2;
+  ctx.save();ctx.strokeStyle=color;ctx.lineWidth=sw;ctx.globalAlpha=opacity;
+  ctx.beginPath();ctx.moveTo(cx-h,cy);ctx.lineTo(cx+h,cy);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(cx,cy-h);ctx.lineTo(cx,cy+h);ctx.stroke();
+  ctx.restore();
+}
+function dot(ctx,x,y,r,fill,opacity){
+  ctx.save();ctx.fillStyle=fill;ctx.globalAlpha=opacity;
+  ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();ctx.restore();
+}
+
+/* ── RESULT ── */
+function showResult(){
+  const final=parseFloat(Math.min(gVal,118).toFixed(1));
+  const vibe=getVibe(final);
+  if(vibe.id==='mastermind')SFX.perfect();else if(final>104)SFX.overload();
+  setTimeout(SFX.print,320);
+
+  /* Fill info strip */
+  document.getElementById('r-name').textContent=playerName.toUpperCase();
+  document.getElementById('r-score').textContent=final+'%';
+  document.getElementById('r-rating').textContent=vibe.rating;
+  document.getElementById('r-drink').textContent=vibe.drink;
+  document.getElementById('r-dnote').textContent=vibe.dnote;
+
+  /* Style info strip & cards to match vibe */
+  const strip=document.getElementById('info-strip');
+  strip.style.borderColor=vibe.c1+'44';
+  const drinkCard=document.getElementById('drink-card');
+  drinkCard.style.borderLeftColor=vibe.c1;
+  const codeCard=document.getElementById('code-card');
+  codeCard.style.background=vibe.c1;
+  codeCard.style.color=vibe.bg==='#FFFFFF'?'#111':vibe.bg;
+  codeCard.querySelectorAll('span').forEach(s=>s.style.color=vibe.bg==='#FFFFFF'?'#111':vibe.bg);
+
+  /* Full screen bg */
+  document.getElementById('vcanvas').style.background=vibe.bg;
+
+  /* Deco */
+  buildVibeDeco(vibe);
+  buildParticles(vibe.c1);
+
+  /* Generate canvas card */
+  // Wait for fonts to be ready
+  document.fonts.ready.then(()=>{
+    drawCard(vibe, playerName, final);
+  });
+
+  /* Play again button color */
+  const btn=document.getElementById('again-btn');
+  btn.style.background=vibe.bg==='#FFFFFF'?'#0A0A0A':vibe.bg;
+  btn.style.color=vibe.c1;
+
+  document.getElementById('result-panel').scrollTop=0;
+  resetConfirm();
+  show('s-result');
+}
+
+function buildVibeDeco(v){
+  const el=document.getElementById('vdeco');
+  const c=v.c1;
+  el.innerHTML=`<svg width="100%" height="100%" viewBox="0 0 820 1180" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+    <g opacity="0.2" transform="translate(730,110)">${starSVG(0,0,110,16,c)}</g>
+    <circle cx="-30" cy="900" r="180" fill="none" stroke="${c}" stroke-width="3" opacity="0.12"/>
+    <line x1="40" y1="200" x2="72" y2="200" stroke="${c}" stroke-width="4" opacity="0.25"/>
+    <line x1="56" y1="186" x2="56" y2="214" stroke="${c}" stroke-width="4" opacity="0.25"/>
+    <circle cx="795" cy="320" r="9" fill="${c}" opacity="0.4"/>
+    <circle cx="812" cy="344" r="5" fill="${c}" opacity="0.28"/>
+  </svg>`;
+}
+function starSVG(cx,cy,r,pts,fill){
+  let d='';const inner=r*0.42;
+  for(let i=0;i<pts*2;i++){
+    const rad=i%2===0?r:inner,a=(i*Math.PI/pts)-Math.PI/2;
+    d+=(i===0?'M':'L')+(cx+rad*Math.cos(a)).toFixed(1)+' '+(cy+rad*Math.sin(a)).toFixed(1);
+  }
+  return `<path d="${d}Z" fill="${fill}"/>`;
+}
+function buildParticles(accent){
+  const el=document.getElementById('vparts');el.innerHTML='';
+  for(let i=0;i<18;i++){
+    const p=document.createElement('div');p.className='vp';
+    const sz=2+Math.random()*4;
+    p.style.cssText=`left:${Math.random()*100}%;bottom:${Math.random()*30}%;width:${sz}px;height:${sz}px;background:${accent};opacity:${0.2+Math.random()*0.45};animation-duration:${5+Math.random()*9}s;animation-delay:${Math.random()*5}s`;
+    el.appendChild(p);
+  }
+}
+
+/* PLAY AGAIN */
+function resetConfirm(){confirmRunning=false;const b=document.getElementById('again-bar');b.classList.remove('go');void b.offsetWidth}
+function triggerAgain(){
+  if(confirmRunning)return;
+  SFX.click();confirmRunning=true;
+  document.getElementById('again-bar').classList.add('go');
+  setTimeout(()=>{
+    playerName='';gVal=0;sfxTick=0;renderName();
+    document.getElementById('vcanvas').style.background='';
+    document.getElementById('vdeco').innerHTML='';
+    document.getElementById('vparts').innerHTML='';
+    resetConfirm();show('s-attract');
+  },1800);
+}
+const againBtn=document.getElementById('again-btn');
+againBtn.addEventListener('click',triggerAgain);
+againBtn.addEventListener('touchend',e=>{e.preventDefault();triggerAgain()});
+</script>
+</body>
+</html>
