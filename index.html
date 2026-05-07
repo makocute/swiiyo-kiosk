@@ -488,12 +488,12 @@ html,body{
   <div class="rainbow top"></div>
   <div class="s-topbar">
     <span class="s-brand">SWIIYO</span>
-    <span class="s-step">Step 01 / 03</span>
+    <span class="s-step">Step 01 / 02</span>
   </div>
   <div class="name-top">
     <div class="step-eye">◈ Step One</div>
-    <div class="name-h">Who's getting <em>refueled?</em></div>
-    <div class="name-sub">Enter your name to begin</div>
+    <div class="name-h">Your <em>name</em></div>
+    <div class="name-sub">Up to 6 letters · Tap FUEL IT to start</div>
     <div class="name-field" style="max-width:680px;width:100%">
       <span class="name-lbl">NAME //</span>
       <span class="name-val" id="name-display"><span class="cursor"></span></span>
@@ -501,7 +501,6 @@ html,body{
   </div>
   <div class="kb-wrap">
     <div class="keyboard" id="keyboard">
-      <div class="kb-row" id="kb-nums"></div>
       <div class="kb-row" id="kb-r1"></div>
       <div class="kb-row" id="kb-r2"></div>
       <div class="kb-row" id="kb-r3"></div>
@@ -511,25 +510,6 @@ html,body{
         <div class="kb-key go" id="kb-go">FUEL IT ✦</div>
       </div>
     </div>
-  </div>
-</div>
-
-<!-- ══ S2 SCAN ══ -->
-<div class="screen hidden" id="s-scan">
-  <div class="rainbow top"></div>
-  <div class="s-topbar">
-    <span class="s-brand">SWIIYO</span>
-    <span class="s-step">Step 02 / 03</span>
-  </div>
-  <div class="scan-body">
-    <div class="step-eye">◈ Step Two</div>
-    <div class="scan-h">Show your <em>SFA badge</em></div>
-    <div class="scan-frame">
-      🪪<span class="sb"></span><span class="sl"></span>
-      <div class="scan-beam"></div>
-    </div>
-    <div class="scan-hint">Hold your SFA badge QR code<br>in front of the camera to unlock</div>
-    <button class="scan-demo" id="btn-scan">▸ Simulate Scan (Demo Mode)</button>
   </div>
 </div>
 
@@ -559,6 +539,9 @@ html,body{
       </div>
     </div>
     <div class="speed-lbl" id="speed-lbl">Standby · Hold button to charge</div>
+    <div id="countdown-wrap" style="display:none;font-family:var(--mono);font-size:14px;letter-spacing:0.25em;color:rgba(255,208,0,0.5);text-align:center;margin-top:-8px">
+      AUTO-RELEASE IN <span id="countdown-num" style="color:#FFD000;font-size:18px">8</span>s
+    </div>
   </div>
   <div class="pump-btn-zone">
     <div class="pbtn" id="pbtn">
@@ -567,7 +550,7 @@ html,body{
       <div class="pbtn-word">HOLD</div>
       <div class="pbtn-sub">& release at 100%</div>
     </div>
-    <div class="pump-hint">Hold to charge · Release to lock score<br>Stop at 100% for max glow</div>
+    <div class="pump-hint">Hold &amp; release at 100% for max glow<br>Auto-releases in 8 seconds</div>
   </div>
 </div>
 
@@ -702,7 +685,7 @@ const SFX={
 };
 
 /* ── STATE ── */
-let playerName='',gVal=0,gRunning=false,gTimer=null,sfxTick=0,delTimer=null,confirmRunning=false;
+let playerName='',gVal=0,gRunning=false,gTimer=null,sfxTick=0,delTimer=null,confirmRunning=false,gameActive=false;
 
 /* ── SCREEN MANAGER ── */
 function show(id){
@@ -753,11 +736,7 @@ function addKey(el, fn){
 }
 
 function buildKB(){
-  const nr=document.getElementById('kb-nums');nr.innerHTML='';
-  [...'1234567890'].forEach(k=>{
-    const d=document.createElement('div');d.className='kb-key num';d.textContent=k;
-    addKey(d,()=>typeKey(k));nr.appendChild(d);
-  });
+  // No numbers row — letters only for speed
   [['QWERTYUIOP','kb-r1'],['ASDFGHJKL','kb-r2'],['ZXCVBNM','kb-r3']].forEach(([row,id])=>{
     const el=document.getElementById(id);el.innerHTML='';
     [...row].forEach(k=>{
@@ -793,38 +772,54 @@ function buildKB(){
   // GO key
   addKey(document.getElementById('kb-go'),confirmName);
 }
-function typeKey(k){SFX.key();if(k==='⌫')playerName=playerName.slice(0,-1);else if(playerName.length<16)playerName+=k;renderName()}
+function typeKey(k){SFX.key();if(k==='⌫')playerName=playerName.slice(0,-1);else if(playerName.length<6)playerName+=k;renderName()}
 function renderName(){document.getElementById('name-display').innerHTML=(playerName||'')+'<span class="cursor"></span>'}
-function confirmName(){if(!playerName.trim())playerName='VISITOR';show('s-scan')}
+function confirmName(){
+  if(!playerName.trim())playerName='VISITOR';
+  show('s-pump');
+  startPump();
+}
 
 /* ══ SCAN ══ */
-function doScan(){
-  SFX.scan();
-  setTimeout(()=>show('s-pump'),620);
-  setTimeout(startPump,660);
-}
-(function(){
-  let lastT=0;
-  const scanBtn=document.getElementById('btn-scan');
-  scanBtn.addEventListener('touchstart',e=>{
-    e.preventDefault();
-    const now=Date.now();
-    if(now-lastT<300)return;
-    lastT=now;
-    doScan();
-  },{passive:false});
-  scanBtn.addEventListener('click',()=>{
-    if(Date.now()-lastT<300)return;
-    doScan();
-  });
-})();
+// Scan step removed — flow: Name → Pump directly
 
 /* ══ PUMP ══ */
+let countdownTimer=null;
 function startPump(){
   document.getElementById('pump-name').textContent=playerName.toUpperCase();
   gVal=0;gRunning=false;sfxTick=0;
-  clearInterval(gTimer);renderMeter(0);
+  gameActive=true;
+  clearInterval(gTimer);
+  clearInterval(countdownTimer);
+  renderMeter(0);
   setSpd('Standby · Hold button to charge','#FFD000');
+
+  // 8-second auto countdown
+  let secsLeft=8;
+  const cdWrap=document.getElementById('countdown-wrap');
+  const cdNum=document.getElementById('countdown-num');
+  cdWrap.style.display='none';
+
+  setTimeout(()=>{
+    cdWrap.style.display='block';
+    cdNum.textContent=secsLeft;
+    countdownTimer=setInterval(()=>{
+      secsLeft--;
+      cdNum.textContent=secsLeft;
+      if(secsLeft<=3){cdNum.style.color='#FF3300';}
+      if(secsLeft<=0){
+        clearInterval(countdownTimer);
+        cdWrap.style.display='none';
+        // Auto-release: stop pump and show result
+        gRunning=false;
+        clearInterval(gTimer);
+        const pb=document.getElementById('pbtn');
+        if(pb){pb.classList.remove('pressing','shaking');}
+        if(gameActive)setTimeout(showResult,200);
+      }
+    },1000);
+  },1000); // start countdown after 1s
+
   bindPump();
 }
 
@@ -856,7 +851,9 @@ function bindPump(){
     gRunning=false;
     pb.classList.remove('pressing','shaking');
     clearInterval(gTimer);
-    if(gVal>0.5)setTimeout(showResult,300);
+    clearInterval(countdownTimer);
+    document.getElementById('countdown-wrap').style.display='none';
+    if(gVal>0.5&&gameActive)setTimeout(showResult,300);
   };
 
   // Press: bind on the button with large hit area
@@ -885,7 +882,7 @@ function runTick(){
     else if(gVal<99){setSpd('▸▸▸ ALMOST THERE — release soon!','#FF3300');pb.classList.add('shaking')}
     else if(gVal<=100.5){setSpd('◈ PERFECT ZONE — RELEASE NOW!','#FFFFFF');pb.classList.remove('shaking')}
     else{setSpd('⚠ OVERLOAD — RELEASE!','#FF0000');pb.classList.add('shaking')}
-    if(gVal>=118){gRunning=false;clearInterval(gTimer);setTimeout(showResult,260)}
+    if(gVal>=118){gRunning=false;clearInterval(gTimer);if(gameActive)setTimeout(showResult,260)}
   },52);
 }
 function setSpd(txt,col){const el=document.getElementById('speed-lbl');el.textContent=txt;el.style.color=col}
@@ -1056,6 +1053,13 @@ function generateCard(vibe,name,score){
 
 /* ══ RESULT ══ */
 function showResult(){
+  if(!gameActive)return; // prevent ghost calls after reset
+  gameActive=false;
+  clearInterval(countdownTimer);
+  clearInterval(gTimer);
+  gRunning=false;
+  const cdWrap=document.getElementById('countdown-wrap');
+  if(cdWrap)cdWrap.style.display='none';
   const final=parseFloat(Math.min(gVal,118).toFixed(1));
   const vibe=getVibe(final);
   if(vibe.id==='mastermind')SFX.perfect();else if(final>104)SFX.overload();
@@ -1091,13 +1095,21 @@ function showResult(){
   show('s-result');
 
   /* Generate canvas after fonts load */
-  document.fonts.ready.then(()=>{
+  // Generate immediately — fonts loaded from page start
+  try{
     const dataURL=generateCard(vibe,playerName,final);
     document.getElementById('share-img').src=dataURL;
-    // Store for download
     window._currentDataURL=dataURL;
     window._currentName=playerName+'_SWIIYO_Vibe';
-  });
+  }catch(e){
+    // Fallback if fonts not ready
+    document.fonts.ready.then(()=>{
+      const dataURL=generateCard(vibe,playerName,final);
+      document.getElementById('share-img').src=dataURL;
+      window._currentDataURL=dataURL;
+      window._currentName=playerName+'_SWIIYO_Vibe';
+    });
+  }
 }
 
 /* ══ SAVE BUTTON ══ */
@@ -1163,6 +1175,10 @@ function resetConfirm(){
 
 function triggerAgain(){
   if(confirmRunning)return;
+  gameActive=false;       // block any pending showResult calls
+  gRunning=false;         // stop pump if still running
+  clearInterval(gTimer);
+  clearInterval(countdownTimer);
   SFX.click();confirmRunning=true;
   const f=document.getElementById('again-bar-fill');
   f.style.transition='width 1.8s linear';f.style.width='100%';
