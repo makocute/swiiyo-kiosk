@@ -253,9 +253,38 @@ html,body{
 .mnum.danger{color:#FF3300;text-shadow:0 0 60px rgba(255,51,0,0.55)}
 .mnum.perfect{color:#FFF;text-shadow:0 0 80px rgba(255,255,255,0.95)}
 .mpct{font-size:0.3em;color:var(--chalk-d)}
-.ebar-wrap{height:6px;background:rgba(245,242,238,0.07);border-radius:3px;overflow:hidden;margin-top:14px;position:relative}
-.ebar{height:100%;width:0%;border-radius:3px;background:var(--yellow);transition:width 0.06s linear,background 0.3s}
-.emark{position:absolute;top:-6px;bottom:-6px;left:calc(100%/118*100);width:2px;background:rgba(245,242,238,0.25)}
+.ebar-wrap{height:14px;background:rgba(245,242,238,0.07);border-radius:7px;margin-top:16px;position:relative;overflow:visible}
+.ebar{height:100%;width:0%;border-radius:7px;background:var(--yellow);transition:width 0.06s linear,background 0.3s;position:relative;z-index:1}
+
+/* Sweet spot zone: 99–101% highlighted in green */
+.ebar-sweet{
+  position:absolute;
+  top:-4px;bottom:-4px;
+  left:calc(100%/118*99);
+  width:calc(100%/118*2);
+  background:rgba(0,255,100,0.35);
+  border:2px solid #00FF64;
+  border-radius:4px;
+  box-shadow:0 0 12px rgba(0,255,100,0.6),0 0 24px rgba(0,255,100,0.3);
+  animation:sweet-pulse 1.2s ease-in-out infinite;
+  z-index:2;
+  pointer-events:none;
+}
+/* Target line at exactly 100% */
+.emark{
+  position:absolute;
+  top:-10px;bottom:-10px;
+  left:calc(100%/118*100);
+  width:3px;
+  background:#00FF64;
+  box-shadow:0 0 8px #00FF64,0 0 16px rgba(0,255,100,0.5);
+  z-index:3;
+  transform:translateX(-50%);
+}
+@keyframes sweet-pulse{
+  0%,100%{box-shadow:0 0 12px rgba(0,255,100,0.6),0 0 24px rgba(0,255,100,0.3)}
+  50%{box-shadow:0 0 20px rgba(0,255,100,0.9),0 0 40px rgba(0,255,100,0.5)}
+}
 
 .speed-lbl{
   font-family:var(--mono);font-size:14px;letter-spacing:0.2em;
@@ -531,11 +560,12 @@ html,body{
         <span class="mtgt">Target 100.0%</span>
       </div>
       <span class="mnum" id="mnum">00.0<span class="mpct">%</span></span>
-      <div class="ebar-wrap" style="position:relative">
+      <div class="ebar-wrap">
         <div class="ebar" id="ebar"></div>
+        <div class="ebar-sweet"></div>
         <div class="emark"></div>
-        <div style="position:absolute;top:-22px;left:calc(100%/118*100);transform:translateX(-50%);font-family:var(--mono);font-size:11px;color:#FFD000;letter-spacing:0.1em;font-weight:700">100%</div>
-        <div style="position:absolute;bottom:-18px;left:calc(100%/118*100);transform:translateX(-50%);font-family:var(--mono);font-size:10px;color:rgba(255,208,0,0.4);letter-spacing:0.1em">▼ STOP HERE</div>
+        <!-- Label above target -->
+        <div style="position:absolute;top:-28px;left:calc(100%/118*100);transform:translateX(-50%);font-family:var(--mono);font-size:12px;color:#00FF64;letter-spacing:0.1em;font-weight:700;white-space:nowrap;text-shadow:0 0 8px rgba(0,255,100,0.8)">★ RELEASE HERE</div>
       </div>
     </div>
     <div class="speed-lbl" id="speed-lbl">Standby · Hold button to charge</div>
@@ -884,8 +914,20 @@ function runTick(){
   gTimer=setInterval(()=>{
     if(!gRunning)return;
     const t=gVal/100;
-    const spd=0.28+(t*t*3.6);
-    const jitter=gVal>80?(Math.random()-0.5)*0.65:0;
+    // S-curve: fast(0-30%) → steady(30-70%) → fast burst(70-100%)
+    let spd;
+    if(t<0.3){
+      // Fast start: 1.2 → 1.8
+      spd=1.2+(t/0.3)*0.6;
+    } else if(t<0.7){
+      // Steady middle: ~1.8 constant
+      spd=1.8;
+    } else {
+      // Exponential burst: 1.8 → 3.2
+      const u=(t-0.7)/0.3;
+      spd=1.8+(u*u*1.4);
+    }
+    const jitter=gVal>75?(Math.random()-0.5)*0.55:0;
     gVal=Math.min(gVal+spd+jitter,118);
     renderMeter(gVal);
     sfxTick++;
