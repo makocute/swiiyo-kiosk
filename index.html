@@ -685,7 +685,7 @@ const SFX={
 };
 
 /* ── STATE ── */
-let playerName='',gVal=0,gRunning=false,gTimer=null,sfxTick=0,delTimer=null,confirmRunning=false,gameActive=false;
+let playerName='',gVal=0,gRunning=false,gTimer=null,sfxTick=0,delTimer=null,confirmRunning=false,gameActive=false,countdownTimer=null,countdownStartTimer=null;
 
 /* ── SCREEN MANAGER ── */
 function show(id){
@@ -784,41 +784,29 @@ function confirmName(){
 // Scan step removed — flow: Name → Pump directly
 
 /* ══ PUMP ══ */
-let countdownTimer=null;
 function startPump(){
   document.getElementById('pump-name').textContent=playerName.toUpperCase();
   gVal=0;gRunning=false;sfxTick=0;
-  gameActive=true;
-  clearInterval(gTimer);
-  clearInterval(countdownTimer);
+  cancelAllTimers();      // clear any ghost timers from previous round
+  gameActive=true;        // now safe to set active
   renderMeter(0);
   setSpd('Standby · Hold button to charge','#FFD000');
 
   // 8-second auto countdown
+  // Cancel any timers from previous round
+  clearTimeout(countdownStartTimer);
+  clearInterval(countdownTimer);
+  countdownStartTimer=null;
+  countdownTimer=null;
+
   let secsLeft=8;
   const cdWrap=document.getElementById('countdown-wrap');
   const cdNum=document.getElementById('countdown-num');
   cdWrap.style.display='none';
+  cdNum.style.color='#FFD000'; // reset color
 
-  setTimeout(()=>{
-    cdWrap.style.display='block';
-    cdNum.textContent=secsLeft;
-    countdownTimer=setInterval(()=>{
-      secsLeft--;
-      cdNum.textContent=secsLeft;
-      if(secsLeft<=3){cdNum.style.color='#FF3300';}
-      if(secsLeft<=0){
-        clearInterval(countdownTimer);
-        cdWrap.style.display='none';
-        // Auto-release: stop pump and show result
-        gRunning=false;
-        clearInterval(gTimer);
-        const pb=document.getElementById('pbtn');
-        if(pb){pb.classList.remove('pressing','shaking');}
-        if(gameActive)setTimeout(showResult,200);
-      }
-    },1000);
-  },1000); // start countdown after 1s
+  // Countdown only starts after first press — see bindPump
+  // We store this so we can cancel it on again/reset
 
   bindPump();
 }
@@ -839,11 +827,37 @@ function bindPump(){
   const pb=document.getElementById('pbtn');
 
   function onPress(e){
-    // Accept any touch/mouse on the button
     if(gRunning)return;
     gRunning=true;
     pb.classList.add('pressing');
     runTick();
+    // Start 8s countdown from FIRST press (not from screen load)
+    if(!countdownStartTimer && !countdownTimer){
+      let secsLeft=8;
+      const cdWrap=document.getElementById('countdown-wrap');
+      const cdNum=document.getElementById('countdown-num');
+      countdownStartTimer=setTimeout(()=>{
+        if(!gameActive)return;
+        cdWrap.style.display='block';
+        cdNum.textContent=secsLeft;
+        countdownTimer=setInterval(()=>{
+          if(!gameActive){clearInterval(countdownTimer);return;}
+          secsLeft--;
+          cdNum.textContent=secsLeft;
+          if(secsLeft<=3){cdNum.style.color='#FF3300';}
+          if(secsLeft<=0){
+            clearInterval(countdownTimer);
+            countdownTimer=null;
+            cdWrap.style.display='none';
+            gRunning=false;
+            clearInterval(gTimer);
+            const pb2=document.getElementById('pbtn');
+            if(pb2){pb2.classList.remove('pressing','shaking');}
+            if(gameActive)setTimeout(showResult,200);
+          }
+        },1000);
+      },1000);
+    }
   }
 
   _pumpReleaseHandler=function(e){
@@ -1054,10 +1068,7 @@ function generateCard(vibe,name,score){
 /* ══ RESULT ══ */
 function showResult(){
   if(!gameActive)return; // prevent ghost calls after reset
-  gameActive=false;
-  clearInterval(countdownTimer);
-  clearInterval(gTimer);
-  gRunning=false;
+  cancelAllTimers();
   const cdWrap=document.getElementById('countdown-wrap');
   if(cdWrap)cdWrap.style.display='none';
   const final=parseFloat(Math.min(gVal,118).toFixed(1));
@@ -1173,12 +1184,21 @@ function resetConfirm(){
   void f.offsetWidth;
 }
 
-function triggerAgain(){
-  if(confirmRunning)return;
-  gameActive=false;       // block any pending showResult calls
-  gRunning=false;         // stop pump if still running
+function cancelAllTimers(){
+  gameActive=false;
+  gRunning=false;
   clearInterval(gTimer);
   clearInterval(countdownTimer);
+  clearTimeout(countdownStartTimer);
+  countdownTimer=null;
+  countdownStartTimer=null;
+  const cdWrap=document.getElementById('countdown-wrap');
+  if(cdWrap)cdWrap.style.display='none';
+}
+
+function triggerAgain(){
+  if(confirmRunning)return;
+  cancelAllTimers();      // cancel everything immediately
   SFX.click();confirmRunning=true;
   const f=document.getElementById('again-bar-fill');
   f.style.transition='width 1.8s linear';f.style.width='100%';
