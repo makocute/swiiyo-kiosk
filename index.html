@@ -33,11 +33,17 @@ html,body{
 .screen{
   position:absolute;inset:0;
   display:flex;flex-direction:column;
-  align-items:center;overflow:hidden;
-  transition:opacity 0.35s var(--ease),transform 0.35s var(--ease);
+  align-items:center;
+  /* NO overflow:hidden — it clips touch targets */
+  transition:opacity 0.3s var(--ease);
   z-index:1;
 }
-.screen.hidden{opacity:0;pointer-events:none;transform:scale(0.985)}
+.screen.hidden{
+  opacity:0;
+  pointer-events:none;
+  /* display:none after transition so it truly stops catching touches */
+  visibility:hidden;
+}
 
 /* rainbow stripe — used everywhere */
 .rainbow{position:absolute;left:0;right:0;height:8px;background:linear-gradient(90deg,#FF3300,#FFD000,#00C851,#1A56FF,#FF0080,#FF3300);z-index:20}
@@ -107,8 +113,9 @@ html,body{
 
 .name-top{
   width:100%;
-  padding:28px 48px 0;
+  padding:20px 48px 0;
   display:flex;flex-direction:column;align-items:center;
+  flex-shrink:0;
 }
 .step-eye{font-family:var(--mono);font-size:13px;letter-spacing:0.4em;color:rgba(255,208,0,0.8);text-transform:uppercase;margin-bottom:14px}
 .name-h{font-family:var(--display);font-size:clamp(56px,9vw,88px);letter-spacing:0.06em;color:var(--chalk);text-align:center;line-height:1;margin-bottom:4px}
@@ -129,10 +136,13 @@ html,body{
 /* Keyboard — fills bottom portion, large keys */
 .kb-wrap{
   width:100%;flex:1;
-  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
-  padding:0 32px 32px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:12px 32px 28px;
+  /* ensure keyboard always visible, never clipped */
+  min-height:0;
+  overflow:visible;
 }
-.keyboard{width:100%;max-width:820px;display:flex;flex-direction:column;gap:10px}
+.keyboard{width:100%;max-width:820px;display:flex;flex-direction:column;gap:10px;overflow:visible}
 .kb-row{display:flex;justify-content:center;gap:7px}
 
 /* Big keys for iPad low-height operation */
@@ -163,7 +173,7 @@ html,body{
    S2  SCAN
 ══════════════════════════════════ */
 #s-scan{background:var(--ink)}
-.scan-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;gap:32px;position:relative;z-index:1}
+.scan-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;gap:28px;position:relative;z-index:5;overflow:visible}
 .scan-h{font-family:var(--display);font-size:clamp(56px,9vw,84px);letter-spacing:0.06em;color:var(--chalk);text-align:center;line-height:1.1}
 .scan-h em{color:var(--yellow);font-style:normal}
 .scan-frame{width:260px;height:260px;position:relative;display:flex;align-items:center;justify-content:center;font-size:104px}
@@ -175,17 +185,26 @@ html,body{
 .scan-beam{position:absolute;left:4px;right:4px;height:2px;background:linear-gradient(90deg,transparent,var(--yellow),transparent);box-shadow:0 0 14px rgba(255,208,0,0.7);animation:asweep 1.8s ease-in-out infinite;top:0}
 .scan-hint{font-family:var(--mono);font-size:15px;color:var(--chalk-d);text-align:center;line-height:2.2;letter-spacing:0.08em;text-transform:uppercase}
 .scan-demo{
-  background:none;border:2px solid rgba(245,242,238,0.18);color:rgba(245,242,238,0.38);
-  padding:22px 52px;font-family:var(--mono);font-size:15px;letter-spacing:0.2em;
-  cursor:pointer;text-transform:uppercase;transition:border-color 0.2s,color 0.2s;
-  border-radius:4px;
+  background:rgba(245,242,238,0.08);
+  border:2px solid rgba(245,242,238,0.3);
+  color:rgba(245,242,238,0.6);
+  padding:28px 64px;
+  font-family:var(--mono);font-size:16px;letter-spacing:0.2em;
+  cursor:pointer;text-transform:uppercase;
+  transition:border-color 0.2s,color 0.2s,background 0.2s;
+  border-radius:6px;
   position:relative;z-index:10;
   -webkit-appearance:none;
   display:block;
-  min-width:280px;
+  min-width:320px;
   -webkit-touch-callout:none;
+  -webkit-user-select:none;
+  touch-action:manipulation;
 }
-.scan-demo:active{border-color:var(--yellow);color:var(--yellow)}
+.scan-demo:active{
+  background:rgba(255,208,0,0.15);
+  border-color:var(--yellow);color:var(--yellow);
+}
 
 /* ══════════════════════════════════
    S3  PUMP
@@ -688,7 +707,8 @@ let playerName='',gVal=0,gRunning=false,gTimer=null,sfxTick=0,delTimer=null,conf
 /* ── SCREEN MANAGER ── */
 function show(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));
-  document.getElementById(id).classList.remove('hidden');
+  const el=document.getElementById(id);
+  el.classList.remove('hidden');
 }
 
 /* ══ ATTRACT ══ */
@@ -699,32 +719,35 @@ setInterval(()=>{idleIdx=(idleIdx+1)%idleSeq.length;idleEl.innerHTML=idleSeq[idl
 
 /* ── KEY FIX: use addEventListener not onclick ── */
 (function(){
-  let _touched=false;
+  let lastT=0;
   const btn=document.getElementById('btn-start');
-  btn.addEventListener('touchend',e=>{
+  btn.addEventListener('touchstart',e=>{
     e.preventDefault();
-    _touched=true;
+    const now=Date.now();
+    if(now-lastT<300)return;
+    lastT=now;
     show('s-name');buildKB();
-    setTimeout(()=>{_touched=false},400);
   },{passive:false});
   btn.addEventListener('click',()=>{
-    if(_touched)return;
+    if(Date.now()-lastT<300)return;
     show('s-name');buildKB();
   });
 })();
 
 /* ══ KEYBOARD ══ */
 function addKey(el, fn){
-  // Use touchend for instant response on iPad, click as fallback for desktop
-  let touched=false;
-  el.addEventListener('touchend', e=>{
+  // touchstart = instant, no 300ms delay, most reliable on iOS
+  let lastTouch=0;
+  el.addEventListener('touchstart', e=>{
     e.preventDefault();
-    touched=true;
+    const now=Date.now();
+    if(now-lastTouch<200)return; // debounce
+    lastTouch=now;
     fn();
-    setTimeout(()=>{touched=false},300);
   },{passive:false});
-  el.addEventListener('click', ()=>{
-    if(touched)return; // prevent double-fire
+  // click for desktop mouse
+  el.addEventListener('click', e=>{
+    if(Date.now()-lastTouch<300)return;
     fn();
   });
 }
@@ -744,18 +767,26 @@ function buildKB(){
   });
   // DEL key
   const del=document.getElementById('kb-del');
-  let delTouched=false;
-  del.addEventListener('touchend',e=>{
+  let delLastT=0;
+  del.addEventListener('touchstart',e=>{
     e.preventDefault();
-    delTouched=true;
+    const now=Date.now();
+    if(now-delLastT<200)return;
+    delLastT=now;
     clearTimeout(delTimer);
     typeKey('⌫');
-    setTimeout(()=>{delTouched=false},300);
+    // Long press to clear all
+    delTimer=setTimeout(()=>{playerName='';renderName();SFX.key()},700);
   },{passive:false});
-  del.addEventListener('click',()=>{if(!delTouched)typeKey('⌫')});
-  del.addEventListener('mousedown',()=>{delTimer=setTimeout(()=>{playerName='';renderName();SFX.key()},700)});
-  del.addEventListener('touchstart',()=>{delTimer=setTimeout(()=>{playerName='';renderName();SFX.key()},700)},{passive:true});
-  ['mouseup','touchend'].forEach(e=>del.addEventListener(e,()=>clearTimeout(delTimer)));
+  del.addEventListener('touchend',()=>clearTimeout(delTimer),{passive:true});
+  del.addEventListener('mousedown',()=>{
+    delTimer=setTimeout(()=>{playerName='';renderName();SFX.key()},700);
+  });
+  del.addEventListener('mouseup',()=>clearTimeout(delTimer));
+  del.addEventListener('click',()=>{
+    if(Date.now()-delLastT<300)return;
+    typeKey('⌫');
+  });
   // SPACE key
   const sp=document.querySelector('[data-k=" "]');
   addKey(sp,()=>typeKey(' '));
@@ -773,16 +804,17 @@ function doScan(){
   setTimeout(startPump,660);
 }
 (function(){
-  let _scanTouched=false;
+  let lastT=0;
   const scanBtn=document.getElementById('btn-scan');
-  scanBtn.addEventListener('touchend',e=>{
+  scanBtn.addEventListener('touchstart',e=>{
     e.preventDefault();
-    _scanTouched=true;
+    const now=Date.now();
+    if(now-lastT<300)return;
+    lastT=now;
     doScan();
-    setTimeout(()=>{_scanTouched=false},400);
   },{passive:false});
   scanBtn.addEventListener('click',()=>{
-    if(_scanTouched)return;
+    if(Date.now()-lastT<300)return;
     doScan();
   });
 })();
@@ -1080,8 +1112,15 @@ function doSave(){
   document.body.removeChild(a);
 }
 
-document.getElementById('save-btn').addEventListener('click',doSave);
-document.getElementById('save-btn').addEventListener('touchend',e=>{e.preventDefault();doSave()});
+(function(){
+  let lastT=0;
+  const sb=document.getElementById('save-btn');
+  sb.addEventListener('touchstart',e=>{
+    e.preventDefault();
+    const now=Date.now();if(now-lastT<300)return;lastT=now;doSave();
+  },{passive:false});
+  sb.addEventListener('click',()=>{if(Date.now()-lastT<300)return;doSave()});
+})();
 
 /* ══ VIBE DECO ══ */
 function buildVibeDeco(v){
@@ -1141,9 +1180,15 @@ function triggerAgain(){
   },1800);
 }
 
-const againBtn=document.getElementById('again-btn');
-againBtn.addEventListener('click',triggerAgain);
-againBtn.addEventListener('touchend',e=>{e.preventDefault();triggerAgain()});
+(function(){
+  let lastT=0;
+  const ab=document.getElementById('again-btn');
+  ab.addEventListener('touchstart',e=>{
+    e.preventDefault();
+    const now=Date.now();if(now-lastT<300)return;lastT=now;triggerAgain();
+  },{passive:false});
+  ab.addEventListener('click',()=>{if(Date.now()-lastT<300)return;triggerAgain()});
+})();
 </script>
 </body>
 </html>
