@@ -242,7 +242,7 @@ html,body{
 }
 
 .pbtn{
-  width:280px;height:280px;border-radius:50%;
+  width:min(560px,55vw);height:min(560px,55vw);border-radius:50%;
   background:rgba(245,242,238,0.04);
   border:4px solid rgba(255,51,0,0.5);
   display:flex;flex-direction:column;
@@ -266,9 +266,9 @@ html,body{
 .pbtn.pressing .ring:nth-child(1){animation:aring 1.1s ease-out 0s infinite}
 .pbtn.pressing .ring:nth-child(2){animation:aring 1.1s ease-out 0.37s infinite}
 .pbtn.pressing .ring:nth-child(3){animation:aring 1.1s ease-out 0.74s infinite}
-.pbtn-icon{font-size:72px;margin-bottom:6px;position:relative;z-index:1}
-.pbtn-word{font-family:var(--display);font-size:44px;letter-spacing:0.25em;color:var(--red);position:relative;z-index:1}
-.pbtn-sub{font-family:var(--mono);font-size:12px;letter-spacing:0.2em;color:rgba(255,51,0,0.5);text-transform:uppercase;position:relative;z-index:1;margin-top:4px}
+.pbtn-icon{font-size:100px;margin-bottom:10px;position:relative;z-index:1}
+.pbtn-word{font-family:var(--display);font-size:68px;letter-spacing:0.25em;color:var(--red);position:relative;z-index:1}
+.pbtn-sub{font-family:var(--mono);font-size:16px;letter-spacing:0.2em;color:rgba(255,51,0,0.5);text-transform:uppercase;position:relative;z-index:1;margin-top:6px}
 
 .pump-hint{font-family:var(--mono);font-size:13px;color:rgba(245,242,238,0.18);text-align:center;line-height:2;letter-spacing:0.06em;text-transform:uppercase}
 
@@ -296,11 +296,13 @@ html,body{
 
 /* Top: share image preview */
 .share-preview{
-  flex:0 0 48%;
+  flex:1;
   width:100%;
   display:flex;align-items:center;justify-content:center;
-  padding:20px 32px 12px;
+  padding:16px 24px 8px;
   position:relative;
+  min-height:0;
+  overflow:hidden;
 }
 .share-img{
   height:100%;
@@ -320,13 +322,12 @@ html,body{
 
 /* Bottom: info + buttons */
 .result-bottom{
-  flex:1;
+  flex:0 0 auto;
   width:100%;
   display:flex;flex-direction:column;
   align-items:center;
-  padding:0 32px 0;
-  gap:12px;
-  overflow:hidden;
+  padding:8px 32px 16px;
+  gap:10px;
 }
 
 /* Vibe title strip */
@@ -402,7 +403,7 @@ html,body{
   background:rgba(245,242,238,0.08);
   border-radius:2px;
   overflow:hidden;
-  margin-bottom:4px;
+  margin-bottom:0;
 }
 .again-bar-fill{width:0%;height:100%;background:var(--chalk);transition:width 1.8s linear;border-radius:2px}
 
@@ -511,9 +512,11 @@ html,body{
         <span class="mtgt">Target 100.0%</span>
       </div>
       <span class="mnum" id="mnum">00.0<span class="mpct">%</span></span>
-      <div class="ebar-wrap">
+      <div class="ebar-wrap" style="position:relative">
         <div class="ebar" id="ebar"></div>
         <div class="emark"></div>
+        <div style="position:absolute;top:-22px;left:calc(100%/118*100);transform:translateX(-50%);font-family:var(--mono);font-size:11px;color:#FFD000;letter-spacing:0.1em;font-weight:700">100%</div>
+        <div style="position:absolute;bottom:-18px;left:calc(100%/118*100);transform:translateX(-50%);font-family:var(--mono);font-size:10px;color:rgba(255,208,0,0.4);letter-spacing:0.1em">▼ STOP HERE</div>
       </div>
     </div>
     <div class="speed-lbl" id="speed-lbl">Standby · Hold button to charge</div>
@@ -848,8 +851,21 @@ function generateCard(vibe,name,score){
   /* Score badge */
   const sbX=W-280,sbY=nameY-20;
   ctx.fillStyle=fg;ctx.fillRect(sbX,sbY,240,120);
-  // Score badge text: white on dark, dark on light
-  const badgeTxtColor = isLight ? '#111' : (bg === '#0A0A0A' ? '#FF0000' : bg);
+  // Badge text: use bg color BUT ensure contrast
+  // Per-vibe explicit badge text colors for readability
+  const badgeTextMap = {
+    'flatliner':  '#1A56FF', // yellow badge → blue text
+    'hustler':    '#FF3300', // white badge → red text
+    'operator':   '#00C851', // dark purple badge → green text
+    'strategist': '#5500FF', // neon green badge → purple text
+    'closer':     '#FFD000', // black badge → yellow text
+    'sharp':      '#FF0080', // yellow badge → pink text
+    'precision':  '#FF6B35', // dark navy badge → orange text
+    'mastermind': '#FFFFFF', // black badge → white text
+    'risk':       '#E0000C', // white badge → red text
+    'chaos':      '#0A0A0A', // red badge → black text
+  };
+  const badgeTxtColor = badgeTextMap[vibe.id] || '#111';
   ctx.fillStyle=badgeTxtColor;
   ctx.font=`900 72px 'Bebas Neue',sans-serif`;ctx.textAlign='center';
   ctx.fillText(score+'%',sbX+120,sbY+84);
@@ -906,7 +922,7 @@ function generateCard(vibe,name,score){
 
   /* Code pill */
   ctx.fillStyle=fg;ctx.fillRect(72,panY+244,440,84);
-  const pillTxtColor = isLight ? '#111' : (bg === '#0A0A0A' ? '#FF0000' : bg);
+  const pillTxtColor = badgeTextMap[vibe.id] || '#111';
   ctx.fillStyle=pillTxtColor;
   ctx.font=`900 58px 'Bebas Neue',sans-serif`;ctx.textAlign='center';
   ctx.fillText('GLOWUP-SFA26',72+220,panY+307);ctx.textAlign='left';
