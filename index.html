@@ -512,36 +512,6 @@ html,body{
   </div>
 </div>
 
-<!-- ══ S1 NAME ══ -->
-<div class="screen hidden" id="s-name">
-  <div class="rainbow top"></div>
-  <div class="s-topbar">
-    <span class="s-brand">SWIIYO</span>
-    <span class="s-step">Step 01 / 02</span>
-  </div>
-  <div class="name-top">
-    <div class="step-eye">◈ Step One</div>
-    <div class="name-h">Your <em>name</em></div>
-    <div class="name-sub">Up to 6 letters · Tap FUEL IT to start</div>
-    <div class="name-field" style="max-width:680px;width:100%">
-      <span class="name-lbl">NAME //</span>
-      <span class="name-val" id="name-display"><span class="cursor"></span></span>
-    </div>
-  </div>
-  <div class="kb-wrap">
-    <div class="keyboard" id="keyboard">
-      <div class="kb-row" id="kb-r1"></div>
-      <div class="kb-row" id="kb-r2"></div>
-      <div class="kb-row" id="kb-r3"></div>
-      <div class="kb-row">
-        <div class="kb-key wide" id="kb-del">⌫ DEL</div>
-        <div class="kb-key wide" data-k=" ">SPACE</div>
-        <div class="kb-key go" id="kb-go">FUEL IT ✦</div>
-      </div>
-    </div>
-  </div>
-</div>
-
 <!-- ══ S3 PUMP ══ -->
 <div class="screen hidden" id="s-pump">
   <div class="rainbow top"></div>
@@ -580,7 +550,18 @@ html,body{
       <div class="pbtn-word">HOLD</div>
       <div class="pbtn-sub">& release at 100%</div>
     </div>
-    <div class="pump-hint">Hold &amp; release at 100% for max glow<br>Auto-releases in 8 seconds</div>
+    <!-- Big instruction -->
+    <div style="text-align:center;margin-top:4px">
+      <div style="font-family:var(--display);font-size:clamp(36px,5vw,52px);letter-spacing:0.12em;color:var(--chalk);line-height:1.1">
+        HOLD THE BUTTON
+      </div>
+      <div style="font-family:var(--display);font-size:clamp(28px,4vw,40px);letter-spacing:0.1em;color:#00FF64;line-height:1.2;margin-top:4px">
+        STOP AT THE GREEN ZONE
+      </div>
+      <div style="font-family:var(--mono);font-size:13px;letter-spacing:0.2em;color:var(--chalk-d);margin-top:10px;text-transform:uppercase">
+        Release at 100% · Auto-ends in 8s
+      </div>
+    </div>
   </div>
 </div>
 
@@ -601,6 +582,10 @@ html,body{
 
     <!-- Bottom: info + buttons -->
     <div class="result-bottom">
+      <!-- Energy level label — big, bold, immediate -->
+      <div id="energy-tag-bar" style="width:100%;max-width:640px;padding:12px 24px;text-align:center">
+        <div id="energy-tag" style="font-family:var(--display);font-size:clamp(40px,6vw,64px);letter-spacing:0.1em;color:var(--chalk);line-height:1"></div>
+      </div>
       <!-- Vibe title strip -->
       <div class="vibe-strip" id="vibe-strip">
         <span class="vibe-medal-sm" id="r-medal">✦</span>
@@ -639,43 +624,43 @@ html,body{
 ══════════════════════════════════════════ */
 
 const VIBES=[
-  {id:'flatliner',min:0,max:39.9,medal:'🔋',title:'THE FLATLINER',sub:'Needs Immediate Refueling',rating:'CRITICAL LOW',
+  {id:'flatliner',energyTag:'💀 CRITICALLY LOW',min:0,max:39.9,medal:'🔋',title:'THE FLATLINER',sub:'Needs Immediate Refueling',rating:'CRITICAL LOW',
    copy:"Your tank is on fumes.\nEvery empire started with someone\nwho refused to quit on empty.",
    drink:'Swiiyo Aura · Grape Passion Fruit',dnote:'Zero-cal Beauty Sparkling · Your comeback starts here.',
    bg:'#1A56FF',c1:'#FFE600',c2:'#FFFFFF'},
-  {id:'hustler',min:40,max:59.9,medal:'🔥',title:'THE HUSTLER',sub:'Always In Motion',rating:'GRINDING',
+  {id:'hustler',energyTag:'🔥 GRINDING HARD',min:40,max:59.9,medal:'🔥',title:'THE HUSTLER',sub:'Always In Motion',rating:'GRINDING',
    copy:"You don't wait for perfect.\nYou move, and figure it out\nin the process.",
    drink:'Swiiyo Energy · Popping Boba Orange',dnote:'25 cal · 5g sugar · Hits different.',
    bg:'#FF3300',c1:'#FFFFFF',c2:'#FFE600'},
-  {id:'operator',min:60,max:74.9,medal:'🎯',title:'THE SMOOTH OPERATOR',sub:'Calculated & Composed',rating:'STEADY',
+  {id:'operator',energyTag:'🎯 STEADY & SMOOTH',min:60,max:74.9,medal:'🎯',title:'THE SMOOTH OPERATOR',sub:'Calculated & Composed',rating:'STEADY',
    copy:"Precision is a competitive advantage.\nYou don't rush the close.\nThat separates great buyers.",
    drink:'Swiiyo Aura · Muscat Grape',dnote:'Zero-cal Unsweetened · Clean and focused.',
    bg:'#00C851',c1:'#1A0050',c2:'#FFFFFF'},
-  {id:'strategist',min:75,max:84.9,medal:'♟️',title:'THE STRATEGIST',sub:'Three Moves Ahead',rating:'TACTICAL',
+  {id:'strategist',energyTag:'♟️ TACTICAL MODE',min:75,max:84.9,medal:'♟️',title:'THE STRATEGIST',sub:'Three Moves Ahead',rating:'TACTICAL',
    copy:"While others react,\nyou're planning next quarter.\nThe best SKU? You already know.",
    drink:'Swiiyo Aura · Rose Lychee',dnote:'Zero-cal Beauty Sparkling · For planners.',
    bg:'#5500FF',c1:'#00FF88',c2:'#FFFFFF'},
-  {id:'closer',min:85,max:92.4,medal:'💼',title:'THE CLOSER',sub:'Seals the Deal',rating:'DIALED IN',
+  {id:'closer',energyTag:'💼 ALMOST THERE',min:85,max:92.4,medal:'💼',title:'THE CLOSER',sub:'Seals the Deal',rating:'DIALED IN',
    copy:"People remember when you walk in.\nNot because you're loud —\nbecause you're decided.",
    drink:'Swiiyo Energy · Popping Boba Orange',dnote:'25 cal · 5g sugar · Almost done.',
    bg:'#FFD000',c1:'#0A0A0A',c2:'#FF3300'},
-  {id:'sharp',min:92.5,max:96.9,medal:'⚡',title:'THE SHARP ONE',sub:'Nothing Gets Past You',rating:'ACUTE',
+  {id:'sharp',energyTag:'⚡ SHARP & DIALED',min:92.5,max:96.9,medal:'⚡',title:'THE SHARP ONE',sub:'Nothing Gets Past You',rating:'ACUTE',
    copy:"You notice what others skip.\nThe margin discrepancy.\nThe SKU that hasn't peaked yet.",
    drink:'Swiiyo Aura · Grape Passion Fruit',dnote:'Zero-cal Beauty Sparkling · Sharp palate.',
    bg:'#FF0080',c1:'#FFE600',c2:'#FFFFFF'},
-  {id:'precision',min:97,max:99.4,medal:'🎖️',title:'THE PRECISION PRO',sub:'Accuracy Is Everything',rating:'ELITE',
+  {id:'precision',energyTag:'🎖️ NEAR PERFECT',min:97,max:99.4,medal:'🎖️',title:'THE PRECISION PRO',sub:'Accuracy Is Everything',rating:'ELITE',
    copy:"Close isn't a miss — it's a standard.\nYou operate at a level\nmost buyers can't touch.",
    drink:'Swiiyo Aura · Muscat Grape',dnote:'Zero-cal Unsweetened · Precision flavor.',
    bg:'#FF6B35',c1:'#001F5B',c2:'#FFFFFF'},
-  {id:'mastermind',min:99.5,max:100.5,medal:'👑',title:'THE MASTERMIND',sub:'★ Flawless Execution ★',rating:'★ PERFECT ★',
+  {id:'mastermind',energyTag:'👑 FLAWLESS',min:99.5,max:100.5,medal:'👑',title:'THE MASTERMIND',sub:'★ Flawless Execution ★',rating:'★ PERFECT ★',
    copy:"You didn't just hit 100.\nYou intended to hit 100.\nTrends happen because of you.",
    drink:'Swiiyo Energy · Popping Boba Orange',dnote:'25 cal · 5g sugar · Perfect match.',
    bg:'#FFFFFF',c1:'#0A0A0A',c2:'#FF0080'},
-  {id:'risk',min:100.6,max:105,medal:'🎲',title:'THE RISK TAKER',sub:'Deliberately Over the Line',rating:'DARING',
+  {id:'risk',energyTag:'🎲 OVER THE EDGE',min:100.6,max:105,medal:'🎲',title:'THE RISK TAKER',sub:'Deliberately Over the Line',rating:'DARING',
    copy:"You knew where 100 was.\nYou blew right past it.\nHigh risk. High reward.",
    drink:'Swiiyo Aura · Rose Lychee',dnote:'Zero-cal Beauty Sparkling · Push the edge.',
    bg:'#E0000C',c1:'#FFFFFF',c2:'#FFE600'},
-  {id:'chaos',min:105.1,max:999,medal:'💥',title:'THE CHAOS AGENT',sub:'Off Every Chart',rating:'🚨 OVERLOAD',
+  {id:'chaos',energyTag:'💥 OFF THE CHARTS',min:105.1,max:999,medal:'💥',title:'THE CHAOS AGENT',sub:'Off Every Chart',rating:'🚨 OVERLOAD',
    copy:"The gauge broke.\nThe market didn't know what hit it.\nYou are the disruption.",
    drink:'Swiiyo Energy · Popping Boba Orange',dnote:'25 cal · 5g sugar · Unstoppable.',
    bg:'#0A0A0A',c1:'#FF0000',c2:'#FFE600'},
@@ -715,7 +700,7 @@ const SFX={
 };
 
 /* ── STATE ── */
-let playerName='',gVal=0,gRunning=false,gTimer=null,sfxTick=0,delTimer=null,confirmRunning=false,gameActive=false,countdownTimer=null,countdownStartTimer=null;
+let playerName='YOU',gVal=0,gRunning=false,gTimer=null,sfxTick=0,confirmRunning=false,gameActive=false,countdownTimer=null,countdownStartTimer=null;
 
 /* ── SCREEN MANAGER ── */
 function show(id){
@@ -739,76 +724,27 @@ setInterval(()=>{idleIdx=(idleIdx+1)%idleSeq.length;idleEl.innerHTML=idleSeq[idl
     const now=Date.now();
     if(now-lastT<300)return;
     lastT=now;
-    show('s-name');buildKB();
+    show('s-pump');
+    playerName='YOU';
+    document.getElementById('pump-name').textContent='';
+    startPump();
   },{passive:false});
   btn.addEventListener('click',()=>{
     if(Date.now()-lastT<300)return;
-    show('s-name');buildKB();
+    show('s-pump');
+    playerName='YOU';
+    document.getElementById('pump-name').textContent='';
+    startPump();
   });
 })();
 
 /* ══ KEYBOARD ══ */
-function addKey(el, fn){
-  // touchstart = instant, no 300ms delay, most reliable on iOS
-  let lastTouch=0;
-  el.addEventListener('touchstart', e=>{
-    e.preventDefault();
-    const now=Date.now();
-    if(now-lastTouch<200)return; // debounce
-    lastTouch=now;
-    fn();
-  },{passive:false});
-  // click for desktop mouse
-  el.addEventListener('click', e=>{
-    if(Date.now()-lastTouch<300)return;
-    fn();
-  });
-}
 
-function buildKB(){
-  // No numbers row — letters only for speed
-  [['QWERTYUIOP','kb-r1'],['ASDFGHJKL','kb-r2'],['ZXCVBNM','kb-r3']].forEach(([row,id])=>{
-    const el=document.getElementById(id);el.innerHTML='';
-    [...row].forEach(k=>{
-      const d=document.createElement('div');d.className='kb-key';d.textContent=k;
-      addKey(d,()=>typeKey(k));el.appendChild(d);
-    });
-  });
-  // DEL key
-  const del=document.getElementById('kb-del');
-  let delLastT=0;
-  del.addEventListener('touchstart',e=>{
-    e.preventDefault();
-    const now=Date.now();
-    if(now-delLastT<200)return;
-    delLastT=now;
-    clearTimeout(delTimer);
-    typeKey('⌫');
-    // Long press to clear all
-    delTimer=setTimeout(()=>{playerName='';renderName();SFX.key()},700);
-  },{passive:false});
-  del.addEventListener('touchend',()=>clearTimeout(delTimer),{passive:true});
-  del.addEventListener('mousedown',()=>{
-    delTimer=setTimeout(()=>{playerName='';renderName();SFX.key()},700);
-  });
-  del.addEventListener('mouseup',()=>clearTimeout(delTimer));
-  del.addEventListener('click',()=>{
-    if(Date.now()-delLastT<300)return;
-    typeKey('⌫');
-  });
-  // SPACE key
-  const sp=document.querySelector('[data-k=" "]');
-  addKey(sp,()=>typeKey(' '));
-  // GO key
-  addKey(document.getElementById('kb-go'),confirmName);
-}
-function typeKey(k){SFX.key();if(k==='⌫')playerName=playerName.slice(0,-1);else if(playerName.length<6)playerName+=k;renderName()}
-function renderName(){document.getElementById('name-display').innerHTML=(playerName||'')+'<span class="cursor"></span>'}
-function confirmName(){
-  if(!playerName.trim())playerName='VISITOR';
-  show('s-pump');
-  startPump();
-}
+
+
+
+
+
 
 /* ══ SCAN ══ */
 // Scan step removed — flow: Name → Pump directly
@@ -972,7 +908,7 @@ function drawX(ctx,cx,cy,sz,color,lw,op){
   ctx.restore();
 }
 
-function generateCard(vibe,name,score){
+function generateCard(vibe,score){
   const canvas=document.getElementById('gen-canvas');
   const ctx=canvas.getContext('2d');
   const W=1080,H=1920;
@@ -1010,15 +946,16 @@ function generateCard(vibe,name,score){
   ctx.font=`500 20px 'Space Mono',monospace`;ctx.globalAlpha=0.45;ctx.textAlign='right';
   ctx.fillText('2026 SFA · BOOTH #2344',W-72,88);ctx.textAlign='left';ctx.globalAlpha=1;
 
-  /* PLAYER label */
-  const nameY=360;
-  ctx.font=`700 26px 'Space Mono',monospace`;ctx.fillStyle=fg;ctx.globalAlpha=0.48;
-  ctx.fillText('PLAYER',72,nameY-14);ctx.globalAlpha=1;
+  /* Energy tag — big label replacing name */
+  const nameY=300;
+  ctx.font=`700 28px 'Space Mono',monospace`;ctx.fillStyle=fg;ctx.globalAlpha=0.48;
+  ctx.fillText('YOUR ENERGY LEVEL',72,nameY-14);ctx.globalAlpha=1;
 
-  /* Name — auto size */
-  let nfs=230;ctx.font=`900 ${nfs}px 'Bebas Neue',sans-serif`;
-  while(ctx.measureText(name.toUpperCase()).width>W-150&&nfs>72){nfs-=8;ctx.font=`900 ${nfs}px 'Bebas Neue',sans-serif`}
-  ctx.fillStyle=fg;ctx.fillText(name.toUpperCase(),72,nameY+nfs*0.82);
+  /* Energy tag text — large */
+  const eTag=vibe.energyTag||vibe.rating;
+  let nfs=130;ctx.font=`900 ${nfs}px 'Bebas Neue',sans-serif`;
+  while(ctx.measureText(eTag).width>W-310&&nfs>60){nfs-=6;ctx.font=`900 ${nfs}px 'Bebas Neue',sans-serif`}
+  ctx.fillStyle=fg;ctx.fillText(eTag,72,nameY+nfs*0.82);
 
   /* Score badge */
   const sbX=W-280,sbY=nameY-20;
@@ -1118,6 +1055,10 @@ function showResult(){
   if(vibe.id==='mastermind')SFX.perfect();else if(final>104)SFX.overload();
   setTimeout(SFX.print,280);
 
+  /* Energy tag — big headline */
+  const etEl=document.getElementById('energy-tag');
+  if(etEl) etEl.textContent=vibe.energyTag||vibe.medal+' '+vibe.rating;
+
   /* Fill strip */
   document.getElementById('r-medal').textContent=vibe.medal;
   document.getElementById('r-title').textContent=vibe.title.replace('\n',' ');
@@ -1150,14 +1091,14 @@ function showResult(){
   /* Generate canvas after fonts load */
   // Generate immediately — fonts loaded from page start
   try{
-    const dataURL=generateCard(vibe,playerName,final);
+    const dataURL=generateCard(vibe,final);
     document.getElementById('share-img').src=dataURL;
     window._currentDataURL=dataURL;
     window._currentName=playerName+'_SWIIYO_Vibe';
   }catch(e){
     // Fallback if fonts not ready
     document.fonts.ready.then(()=>{
-      const dataURL=generateCard(vibe,playerName,final);
+      const dataURL=generateCard(vibe,final);
       document.getElementById('share-img').src=dataURL;
       window._currentDataURL=dataURL;
       window._currentName=playerName+'_SWIIYO_Vibe';
@@ -1246,8 +1187,7 @@ function triggerAgain(){
   f.style.transition='width 1.8s linear';f.style.width='100%';
   setTimeout(()=>{
     /* Full reset */
-    playerName='';gVal=0;sfxTick=0;
-    renderName();
+    gVal=0;sfxTick=0;
     document.getElementById('vcanvas').style.background='';
     document.getElementById('vdeco').innerHTML='';
     document.getElementById('vparts').innerHTML='';
